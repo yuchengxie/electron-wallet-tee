@@ -40,8 +40,8 @@ PseudoWallet.prototype.teeSign = function (payload) {
 	var h = bitcoinjs.crypto.hash256(payload);
 	var pinLen = parseInt(this.pin_code.length / 2);
 	sCmd = '802100' + '50000' + (pinLen + 32) + this.pin_code + h;
-	transmit(sCmd).then(res=>{
-		
+	return transmit(sCmd).then(res => {
+		return res.data;
 	})
 }
 
@@ -155,7 +155,6 @@ function transmit(cmd) {
 	})
 }
 
-
 function str_commandApdu(s) {
 	return new CommandApdu({ bytes: hexify.toByteArray(s) })
 }
@@ -198,10 +197,6 @@ function timest() {
 	tmp = tmp.substr(0, 10);
 	return parseInt(tmp);
 }
-
-
-
-
 
 function Newborntoken() {
 	this.COINBASE_MATURITY = 8
@@ -349,11 +344,13 @@ function getWaitSubmit(res) {
 
 	orgsheetMsg = msg.parse(payload, 0)[1];
 	console.log('>>>>>> orgsheetMsg:', orgsheetMsg);
-	wallet = new Wallet();
-	var pubkeybuf = wallet.getPubKeyBuf();
-	var pubichash = wallet.publickey_to_hash(pubkeybuf);
+	// wallet = new Wallet();
+	// var pubkeybuf = wallet.getPubKeyBuf();
+	// var pubichash = wallet.publickey_to_hash(pubkeybuf);
+	// var pubkeybuf = bh.hexStrToBuffer(pseudoWallet.pubKey);
+	var pubHash = pseudoWallet.pubHash;
 	//check pay_to balance
-	var coin_hash = Buffer.concat([pubichash, Buffer([0x00])]);
+	var coin_hash = Buffer.concat([pubHash, Buffer([0x00])]);
 
 	var d = {};
 	var payto = makesheet.pay_to;
@@ -409,21 +406,24 @@ function getWaitSubmit(res) {
 			var payload = make_payload(pks_out0, orgsheetMsg.version, orgsheetMsg.tx_in, orgsheetMsg.tx_out, 0, idx, hash_type)  //lock_time=0
 			//签名
 			console.log('>>> ready sign payload:', payload, bufferhelp.bufToStr(payload), payload.length);
-			var sig = Buffer.concat([wallet.sign(payload), CHR(hash_type)]);
-			console.log('sig:', sig, sig.length, bufferhelp.bufToStr(sig));
-			var pub_key = wallet.getPubKeyBuf();
-			console.log('pub_key:', pub_key, pub_key.length);
-			var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), pub_key]);
-			console.log('sig_script:', sig_script, sig_script.length, bufferhelp.bufToStr(sig_script));
-			var txin = new TxnIn();
-			// tx_in.prev_output, sig_script, tx_in.sequence
-			txin.prev_output = tx_in.prev_output;
-			txin.sig_script = bufferhelp.bufToStr(sig_script);
-			txin.sequence = tx_in.sequence;
-			tx_ins2.push(txin);
+			pseudoWallet.teeSign(payload).then(_sig => {
+				console.log('_sig:', _sig, _sig.length, bh.hexStrToBuffer(_sig));
+				var sig = Buffer.concat([bh.hexStrToBuffer(_sig), CHR(hash_type)]);
+				// var pub_key = wallet.getPubKeyBuf();
+				var pub_key = pseudoWallet.pubKey;
+				console.log('pub_key:', pub_key, pub_key.length);
+				var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), pub_key]);
+				console.log('sig_script:', sig_script, sig_script.length, bufferhelp.bufToStr(sig_script));
+				var txin = new TxnIn();
+				// tx_in.prev_output, sig_script, tx_in.sequence
+				txin.prev_output = tx_in.prev_output;
+				txin.sig_script = bufferhelp.bufToStr(sig_script);
+				txin.sequence = tx_in.sequence;
+				tx_ins2.push(txin);
+			})
 		}
 	}
-	console.log('tx_ins2:', tx_ins2, tx_ins2.length);
+	// console.log('tx_ins2:', tx_ins2, tx_ins2.length);
 
 	var txn = new Transaction();
 	txn.version = orgsheetMsg.version;
@@ -448,6 +448,40 @@ function getWaitSubmit(res) {
 	while (_wait_submit.length > SHEET_CACHE_SIZE) {
 		_wait_submit.remove(_wait_submit[0]);
 	}
+}
+
+function getSignedTxns() {
+	var pks_out0 = orgsheetMsg.pks_out[0].items;
+	pks_num = orgsheetMsg.pks_out.length;
+	var tx_ins2 = [];
+	var tx_In = orgsheetMsg.tx_in;
+	for (var idx = 0; idx < tx_In.length; idx++) {
+		var tx_in = tx_In[idx];
+		// # sign every inputs
+		if (idx < pks_num) {
+			var hash_type = 1;
+			//transaction
+			var payload = make_payload(pks_out0, orgsheetMsg.version, orgsheetMsg.tx_in, orgsheetMsg.tx_out, 0, idx, hash_type)  //lock_time=0
+			//签名
+			console.log('>>> ready sign payload:', payload, bufferhelp.bufToStr(payload), payload.length);
+			pseudoWallet.teeSign(payload).then(_sig => {
+				console.log('_sig:', _sig, _sig.length, bh.hexStrToBuffer(_sig));
+				var sig = Buffer.concat([bh.hexStrToBuffer(_sig), CHR(hash_type)]);
+				// var pub_key = wallet.getPubKeyBuf();
+				var pub_key = pseudoWallet.pubKey;
+				console.log('pub_key:', pub_key, pub_key.length);
+				var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), pub_key]);
+				console.log('sig_script:', sig_script, sig_script.length, bufferhelp.bufToStr(sig_script));
+				var txin = new TxnIn();
+				// tx_in.prev_output, sig_script, tx_in.sequence
+				txin.prev_output = tx_in.prev_output;
+				txin.sig_script = bufferhelp.bufToStr(sig_script);
+				txin.sequence = tx_in.sequence;
+				tx_ins2.push(txin);
+			})
+		}
+	}
+	return tx_ins2;
 }
 
 function getTxnHash(res) {

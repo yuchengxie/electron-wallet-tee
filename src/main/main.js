@@ -52,6 +52,7 @@ ipcMain.on('getpass', function (event, data) {
                 var result = '';
                 if (res.data == '9000') {
                     result = 'verify password successful.';
+                    // pseudoWallet.pin_code = data[1];
                 } else {
                     if (res.data.slice(0, 3) == '63c') {
                         result = 'incorrect password, left try count: ' + res.data.slice(3);
@@ -62,7 +63,7 @@ ipcMain.on('getpass', function (event, data) {
                 event.sender.send('replaygetpass', result);
             })
         } catch (error) {
-
+            
         }
     }
 })
@@ -76,6 +77,7 @@ ipcMain.on('setpass', function (event, data) {
         var result = '';
         if (res.data == '9000') {
             result = 'change password successful.';
+
         } else {
             if (res.data.slice(0, 3) == '63c') {
                 result = 'incorrect password, left try count: ' + res.data.slice(3);
@@ -86,7 +88,6 @@ ipcMain.on('setpass', function (event, data) {
         event.sender.send('replysetpass', result);
     })
 })
-
 
 
 
@@ -269,7 +270,7 @@ ipcMain.on('utxo', function (event, data) {
 
 ipcMain.on('transfer', function (event, data) {
     console.log(data);
-    query_sheet('', '');
+    // query_sheet('', '');
     // transfer.query_sheet('', '');
 })
 
@@ -405,16 +406,6 @@ devices.on('device-deactivated', event => {
 // }
 function WalletTee(_pseudoWallet) {
     this.pseudoWallet = _pseudoWallet;
-}
-
-function getpass() {
-
-}
-
-function setpass() {
-    transmit('').then(res => {
-
-    })
 }
 
 function getPubKey() {

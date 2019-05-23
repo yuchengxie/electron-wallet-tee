@@ -11,7 +11,7 @@ const R = {
     Transfer:'transfer',
 }
 
-const Index=R.SetPIN;
+const Index=R.Transfer;
 
 var navhome = document.getElementById('nav_home');
 var navwallet = document.getElementById('nav_wallet_create');
