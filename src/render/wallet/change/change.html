@@ -1,0 +1,63 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../../../bootstrap/js/jQuery.min.js"></script>
+    <script src="../../../bootstrap/js/popper.js"></script>
+    <script src="../../../bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="../../../bootstrap/css/bootstrap.css">
+</head>
+
+<body>
+
+    <div class="container my-3">
+        <div class="row justify-content-center">
+
+            <div class="row col-7 control-group my-3">
+                <div class="row input-group-prepend">
+                    <label class="input-group-text" for="inputGroupSelect01">钱包</label>
+                </div>
+                <select class="col-9 custom-select" id="b_change">
+                    <!-- <option selected>Choose...</option> -->
+                    <!-- <option selected value="1">One</option>
+                    <option value="2">Two</option> -->
+                    <!-- <option value="3">Three</option> -->
+                </select>
+            </div>
+
+            <!-- <div class="row col-7 form-group my-3">
+                <button type="button" class="row btn btn-success dropdown-toggle" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    选择钱包
+                </button>
+                <div class="dropdown-menu" id='b_change'>
+                </div>
+            </div> -->
+
+
+            <div class="col-7 control-group">
+                <!-- <div class="row col-form-label">
+                    钱包名:<label id='wallet_name'></label>
+                </div> -->
+                <div class="row">
+                    <input style="resize:none;display:flex;justify-content: center;align-items: center" type="pwd"
+                        class="form-control" placeholder="输入对应钱包密码" id='input_change_pwd' value="">
+                    </input>
+                </div>
+            </div>
+
+            <div class="col-7 form-group">
+                <div class="row col-form-label justify-content-center control-group">
+                    <button class="btn btn-info col word my-3" id='btn_wallet_change'>
+                        确认
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

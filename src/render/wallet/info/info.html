@@ -1,0 +1,53 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../../../bootstrap/js/jQuery.min.js"></script>
+    <script src="../../../bootstrap/js/popper.js"></script>
+    <script src="../../../bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="../../../bootstrap/css/bootstrap.css">
+</head>
+
+<body>
+    <div class="container my-3">
+
+        <div class="input-group mb-2">
+            <input type="text" id='info_address' class="form-control" placeholder="请输入地址" aria-label="请输入地址"
+                aria-describedby="basic-addon2">
+            <div class="input-group-append">
+                <button class="btn btn-info" id='btn_wallet_info'>查看信息</button>
+            </div>
+        </div>
+
+        <div class="card" id='infocard' style="display:none">
+            <div class="card-body" style="font-size:15px" id='infocontent'>
+            </div>
+        </div>
+        <!-- <div class="card">
+            <div class="card-body" id='infocontent'>
+            </div>
+        </div> -->
+
+
+        <!-- <div class="card" id='infocontent' style="display:none">
+            <div class="card-body" style="font-size:15px" id='blockcontent'>
+            </div>
+        </div> -->
+    </div>
+
+</body>
+
+</html>
+
+<style>
+    p {
+        font-size: 22px;
+    }
+
+    .content {
+        margin-top: 50px;
+    }
+</style>

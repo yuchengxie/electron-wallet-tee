@@ -1,0 +1,78 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../../../bootstrap/js/jQuery.min.js"></script>
+    <script src="../../../bootstrap/js/popper.js"></script>
+    <script src="../../../bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="../../../bootstrap/css/bootstrap.css">
+</head>
+
+<body>
+
+    <div class="container my-3">
+        <div class="row justify-content-center">
+            <div class="col-7 control-group">
+                <div class="row col-form-label">
+                    秘钥:
+                </div>
+                <div class="row">
+                    <textarea style="resize:none;display:flex;justify-content: center;align-items: center" type="pwd"
+                        class="form-control" placeholder="谨慎输入..."
+                        id='import_prvk'>97a5dd2e834020fe1701d06ed3f7a9c5bf88739436fbf83ae764dae3f1d72414</textarea>
+                </div>
+            </div>
+
+            <div class="col-7 control-group">
+                <div class="row col-form-label">
+                    新创建钱包名:
+                </div>
+                <div class="row">
+                    <input style="resize:none;display:flex;justify-content: center;align-items: center" type="pwd"
+                        class="form-control" placeholder="钱包名称" id='import_wallet_name'>
+                    </input>
+                </div>
+            </div>
+
+            <div class="col-7 control-group">
+                <div class="row col-form-label">
+                    设置密码:
+                </div>
+                <div class="row">
+                    <input style="resize:none;display:flex;justify-content: center;align-items: center" type="pwd"
+                        class="form-control" placeholder="设置密码" id='p_import_pwd' value="123456">
+                    </input>
+                </div>
+            </div>
+
+            <div class="col-7 form-group">
+                <div class="row col-form-label justify-content-center control-group">
+                    <button class="btn btn-info col word my-3" id='btn_wallet_import'>
+                        导入钱包
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-7 form-group">
+                <span id='addr_import'></span>
+            </div>
+
+        </div>
+
+
+
+
+
+    </div>
+</body>
+
+</html>
+
+<style>
+    .word {
+        letter-spacing: .3em;
+    }
+</style>

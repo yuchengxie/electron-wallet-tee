@@ -1,0 +1,20 @@
+// 4dabbaf739e4dfec415fea38f1efdbb67a0786746db3d1063b2339a44fb13458
+// 1118hfRMRrJMgSCoV9ztyPcjcgcMZ1zThvqRDLUw3xCYkZwwTAbJ5o
+//Total unspent: 35.5
+// 97a5dd2e834020fe1701d06ed3f7a9c5bf88739436fbf83ae764dae3f1d72414
+// 1118Mi5XxqmqTBp7TnPQd1Hk9XYagJQpDcZu6EiGE1VbXHAw9iZGPV
+//Total unspent: 418.199924
+
+ b[0] + (b[1] << 8) + ((b[2] & 0x0f) << 16)
+
+//查看最后一个区块
+pw block 1-
+pw block 1- 2- 3- 4- 5- 6-
+
+//info
+pw info address
+
+//utxo
+ pw utxo 1118hfRMRrJMgSCoV9ztyPcjcgcMZ1zThvqRDLUw3xCYkZwwTAbJ5o -n 2 
+ 
+ 

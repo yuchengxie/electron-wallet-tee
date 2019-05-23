@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title></title>
+	<script>
+		window.$ = window.jQuery = require('jquery');
+		window.Bootstrap = require('bootstrap');
+	</script>
+	<script src="./bootstrap/js/jQuery.min.js"></script>
+	<script src="./bootstrap/js/popper.js"></script>
+	<script src="./bootstrap/js/bootstrap.min.js"></script>
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap.css">
+	<link rel="stylesheet" href="./index.css">
+
+</head>
+</head>
+
+<body>
+	<div>
+		<nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
+			<a class="navbar-brand" href="#">
+				<img class="logo" src="./static/img/hzf.png" alt="">
+			</a>
+			<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+				aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navbarSupportedContent">
+				<ul class="navbar-nav mr-auto">
+					<li class="nav-item active">
+						<a class="nav-link" id='nav_home' onclick="tab(this)">首页 <span
+								class="sr-only">(current)</span></a>
+					</li>
+
+					<li class="nav-item dropdown">
+						<a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
+							aria-haspopup="true" aria-expanded="false">
+							钱包
+						</a>
+						<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+							<a class="dropdown-item" id='nav_wallet_create' onclick="tab(this)">创建钱包</a>
+							<a class="dropdown-item" id='nav_wallet_import' onclick="tab(this)">导入钱包</a>
+							<a class="dropdown-item" id='nav_wallet_info' onclick="tab(this)">查看钱包</a>
+							<div class="dropdown-divider"></div>
+							<a class="dropdown-item" id='nav_getpin' onclick="tab(this)">查看密码</a>
+							<a class="dropdown-item" id='nav_setpin' onclick="tab(this)">设置密码</a>
+							<!-- <a class="dropdown-item" id='nav_getpin' onclick="tab(this)">查看PIN</a> -->
+						</div>
+					</li>
+
+					<li class="nav-item">
+						<a class="nav-link" id='nav_block' onclick="tab(this)">区块</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" id='nav_utxo' onclick="tab(this)">UTXO</a>
+					</li>
+					<li class="nav-item">
+						<a class="nav-link" id='nav_transfer' onclick="tab(this)">交易</a>
+					</li>
+
+					<!-- <a class="nav-link" id='nav_cun' onclick="tab(this)">存证</a>
+					</li>  -->
+				</ul>
+				<form class="form-inline my-2 my-lg-0">
+					<input class="form-control mr-sm-2" type="search" placeholder="输入查询内容" aria-label="Search">
+					<button class="btn btn-outline-success my-2 my-sm-0" type="submit">查询</button>
+				</form>
+			</div>
+		</nav>
+
+
+		<div id='content'>
+			<div id='home' class="page">
+				<iframe src="./render/home/home.html" name='framehome' width="100%" frameborder="0" scrolling="auto"
+					id='frame_home'></iframe>
+			</div>
+			<div id='wallet_create' class="page">
+				<iframe src="./render/wallet/create/create.html" name='framewallet' width="100%" frameborder="0"
+					scrolling="auto" id='frame_wallet_create'></iframe>
+			</div>
+			<div id='wallet_import' class="page">
+				<iframe src="./render/wallet/import/import.html" name='framewallet' width="100%" frameborder="0"
+					scrolling="auto" id='frame_wallet_import'></iframe>
+			</div>
+			<div id='wallet_info' class="page">
+				<iframe src="./render/wallet/info/info.html" name='framewallet' width="100%" frameborder="0"
+					scrolling="auto" id='frame_wallet_info'></iframe>
+			</div>
+
+			<div id='block' class="page">
+				<iframe src="./render/block/block.html" width="100%" name='frameblock' frameborder="0" scrolling="auto"
+					id='frame_block'></iframe>
+			</div>
+
+			<div id='utxo' class="page">
+				<iframe src="./render/utxo/utxo.html" width="100%" name='frameutxo' frameborder="0" scrolling="auto"
+					id='frame_utxo'></iframe>
+			</div>
+			<div id='transfer' class="page">
+				<iframe src="./render/transfer/transfer.html" width="100%" name='frametransfer' frameborder="0"
+					scrolling="auto" id='frame_transfer'></iframe>
+			</div>
+			<!-- <div id='wallet_change' class="page">
+				<iframe src="./render/wallet/change/change.html" width="100%" name='frametransfer' frameborder="0"
+					scrolling="auto" id='frame_wallet_change'></iframe>
+			</div> -->
+			<div id='setpin' class="page">
+				<iframe src="./render/wallet/pin/setpin.html" width="100%" name='framepin' frameborder="0"
+					scrolling="auto" id='frame_wallet_setpass'></iframe>
+			</div>
+			<div id='getpin' class="page">
+				<iframe src="./render/wallet/pin/getpin.html" width="100%" name='framepin' frameborder="0"
+					scrolling="auto" id='frame_wallet_getpass'></iframe>
+			</div>
+
+		</div>
+	</div>
+</body>
+
+</html>
+<script>
+	require('electron-connect').client.create();
+</script>
+<script src="./router.js"></script>
+<script src="./render/render.js"></script>

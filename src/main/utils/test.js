@@ -1,0 +1,5 @@
+var bh=require('../bus/bufferhelp')
+var s='313131384d69355878716d7154427037546e50516431486b39585961674a517044635a7536456947453156625848417739695a475056'
+
+var s=bh.hexToBuffer(s).toString('latin1');
+console.log(s);

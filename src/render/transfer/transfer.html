@@ -1,0 +1,59 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="../../bootstrap/js/jQuery.min.js"></script>
+    <script src="../../bootstrap/js/popper.js"></script>
+    <script src="../../bootstrap/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="../../bootstrap/css/bootstrap.css">
+</head>
+
+<body>
+    <div class="container my-3">
+        <div class="row justify-content-center">
+            <div class="col-8 control-group">
+                <div class="row col-form-label">发送地址:</div>
+                <input class="row form-control" type="text"
+                    value="1118Mi5XxqmqTBp7TnPQd1Hk9XYagJQpDcZu6EiGE1VbXHAw9iZGPV" id='addrfrom' disabled placeholder="请输入发送地址">
+            </div>
+            <div class="col-8 control-group">
+                <div class="row col-form-label">接收地址:</div>
+                <input class="row form-control" type="text"
+                    value="1118hfRMRrJMgSCoV9ztyPcjcgcMZ1zThvqRDLUw3xCYkZwwTAbJ5o" id='addrto' placeholder="请输入接收地址">
+            </div>
+            <div class="col-8 control-group">
+                <div class="row col-form-label">转账金额:</div>
+                <input class="row form-control" type="text" value="1" id='t_value' placeholder="请输入转账金额">
+            </div>
+
+            <div class="col-8 control-group">
+                <button class="btn btn-info row my-4 col" id='btn_txns'>交易</button>
+            </div>
+
+            <!-- <div class="progress col-8">
+                <div class="progress-bar progress-bar-striped bg-danger" role="progressbar" style="width: 100%"
+                    aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+            </div> -->
+
+
+            <div class="col-8 control-group">
+                <div class="row col-12 progress">
+                    <div class="row progress-bar progress-bar-striped bg-success" role="progressbar" style="width: 110%"
+                        aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">pending</div>
+                </div>
+            </div>
+
+
+
+        </div>
+    </div>
+
+</body>
+
+</html>
+
+<style>
+</style>
