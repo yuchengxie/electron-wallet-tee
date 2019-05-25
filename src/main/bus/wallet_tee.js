@@ -264,17 +264,6 @@ var magic = Buffer.from([0xf9, 0x6e, 0x62, 0x74]);
 
 var sequence = 0, makesheet, orgsheetMsg, _wait_submit = [], SHEET_CACHE_SIZE = 16, txn_binary, hash_, state_info, sn;
 
-// var makesheet;
-// var orgsheetMsg;
-// var _wait_submit = [];
-// var SHEET_CACHE_SIZE = 16;
-// var wallet;
-// var txn_binary;
-// var hash_;
-// var state_info;
-// var sn;
-// var submit = true;
-
 function verify(addr) {
 	if (addr.length <= 32) {
 		throw Error('invalid address');

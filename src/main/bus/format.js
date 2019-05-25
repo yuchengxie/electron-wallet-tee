@@ -209,6 +209,7 @@ var makesheet = {
 var varStrLists = {
     getFmt: function () {
         return 'varStrList[]'
+        // ['items', ''];
     }
 }
 
@@ -217,6 +218,7 @@ var varStrList = {
         return [
             ['items', varstr]
         ]
+        // return varstr;
     }
 }
 
