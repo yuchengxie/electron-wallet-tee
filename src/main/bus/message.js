@@ -376,6 +376,13 @@ function g_parse(data) {
     return payload;
 }
 
+function getCommand(data){
+    var buf_command = data.slice(4, 16);
+    var stripCommand = strip(buf_command);
+    var commandType = stripCommand.toString('latin1');
+    return commandType;
+}
+
 function g_binary(payload, command) {
     //4-16
     var b_command = bufferhelp.strToBuffer(command, 12);
@@ -409,5 +416,5 @@ function parseUtxo(payload) {
 }
 
 module.exports = {
-    bindMsg, g_parse, parseInfo, parseUtxo, parseBlock, g_binary
+    bindMsg, g_parse, parseInfo, parseUtxo, parseBlock, g_binary,getCommand
 }

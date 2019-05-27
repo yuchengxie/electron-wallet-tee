@@ -32,14 +32,14 @@ var pseudoWallet;
 
 function PseudoWallet(pubKey, pubHash, pubAddr, vcn = 0) {
 	// this.pubkey = pubkey;
-	this.pub_key  = utilkey.compress_public_key(pubKey);
+	this.pub_key = utilkey.compress_public_key(pubKey);
 	this.pub_hash = pubHash;
 	this.pub_addr = pubAddr;
 	this._vcn = vcn;
 	this.coin_type = 0x00; // fixed to '00'
 	this.pin_code = '000000'; //always reset to '000000'
-	this.pub_addr2=utilkey.publickey_to_address(this.pub_key,vcn,this.coin_type,0x00);
-	var c=1;
+	this.pub_addr2 = utilkey.publickey_to_address(this.pub_key, vcn, this.coin_type, 0x00);
+	var c = 1;
 }
 
 
@@ -238,7 +238,7 @@ var WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
 var command_type = 'makesheet';
 var magic = Buffer.from([0xf9, 0x6e, 0x62, 0x74]);
 
-var sequence = 0, makesheet, orgsheetMsg, _wait_submit = [], SHEET_CACHE_SIZE = 16, txn_binary, hash_, state_info, sn, tx_ins2 = [], tx_ins_len, tx_In, pks_out0, _len, hash_type = 1,submit = true;
+var sequence = 0, makesheet, orgsheetMsg, _wait_submit = [], SHEET_CACHE_SIZE = 16, txn_binary, hash_, state_info, sn, tx_ins2 = [], tx_ins_len, tx_In, pks_out0, _len, hash_type = 1, submit = true;
 
 function verify(addr) {
 	if (addr.length <= 32) {
@@ -352,65 +352,19 @@ function getWaitSubmit(res) {
 		return 0;
 	}
 
-	pks_out0 = orgsheetMsg.pks_out[0].items;
-	pks_num = orgsheetMsg.pks_out.length;
+	// pks_out0 = orgsheetMsg.pks_out;
+	// pks_num = orgsheetMsg.pks_out.length;
+	var pks_out = orgsheetMsg.pks_out;
+	pks_out0 = [];
+	for (v in pks_out) {
+		pks_out0.push(pks_out[v]['items']);
+	}
+	pks_num = pks_out0.length;
+	// pks_num = orgsheetMsg.pks_out.length;
 
 	tx_In = orgsheetMsg.tx_in;
 	_len = tx_In.length;
-	hash_type
-	getAllSingedTxns(0, signAllTxns);
-
-
-	// tx_In.forEach((tx_in, idx) => {
-	// 	var hash_type = 1;
-	// 	var payload;
-	// 	pseudoWallet.teeSign(payload).then(res => {
-	// 		if (idx < pks_num) {
-	// 			payload = make_payload(pks_out0, orgsheetMsg.version, orgsheetMsg.tx_in, orgsheetMsg.tx_out, 0, idx, hash_type)
-	// 			console.log('>>> ready sign payload:', payload, bufferhelp.bufToStr(payload), payload.length);
-	// 			_sig = res;
-	// 			console.log('_sig:', _sig, _sig.length, bh.hexStrToBuffer(_sig));
-	// 			var sig = Buffer.concat([bh.hexStrToBuffer(_sig), CHR(hash_type)]);
-	// 			var pub_key = pseudoWallet.pubkey;
-	// 			console.log('pub_key:', pub_key, pub_key.length);
-	// 			var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), bh.hexStrToBuffer(pub_key)]);
-	// 			console.log('sig_script:', sig_script, sig_script.length, bufferhelp.bufToStr(sig_script));
-	// 			var txin = new TxnIn();
-	// 			// tx_in.prev_output, sig_script, tx_in.sequence
-	// 			txin.prev_output = tx_in.prev_output;
-	// 			txin.sig_script = bufferhelp.bufToStr(sig_script);
-	// 			txin.sequence = tx_in.sequence;
-	// 			tx_ins2.push(txin);
-	// 		}
-	// 	})
-	// });
-	// console.log('tx_ins2:', tx_ins2, tx_ins2.length);
-
-	// console.log('>>>>>>>>>>>>>>> 123123123123123 <<<<<<<<<<<<<<<<<<');
-	// sleep(3000);
-	// var txn = new Transaction();
-	// txn.version = orgsheetMsg.version;
-	// txn.tx_in = tx_ins2;
-	// txn.tx_out = orgsheetMsg.tx_out;
-	// txn.lock_time = orgsheetMsg.lock_time;
-	// txn.sig_raw = '';
-	// console.log('>>> txn msg:', txn);
-	// //Transaction binary2
-	// var txn_payload = transbinary.compayloadTran(txn);
-
-	// //txn payload magic
-	// txn_binary = message.g_binary(txn_payload, 'tx');
-	// console.log('>>> txn_binary:', txn_binary, txn_binary.length, bufferhelp.bufToStr(txn_binary));
-
-	// //payload  hashds excludes raw_script
-	// hash_ = bitcoinjs.crypto.sha256(bitcoinjs.crypto.sha256(txn_binary.slice(24, txn_binary.length - 1)));
-
-	// // console.log('>>> hash_:', hash_, hash_.length, bufferhelp.bufToStr(hash_));
-	// state_info = [orgsheetMsg.sequence, txn, 'requested', hash_, orgsheetMsg.last_uocks];
-	// _wait_submit.push(state_info);
-	// while (_wait_submit.length > SHEET_CACHE_SIZE) {
-	// 	_wait_submit.remove(_wait_submit[0]);
-	// }
+	getAllSingedTxns(0, signEachTxn);
 }
 
 function getAllSingedTxns(len, cb) {
@@ -422,18 +376,11 @@ function getAllSingedTxns(len, cb) {
 	} else {
 		console.log('tx_ins2:', tx_ins2, tx_ins2.length);
 		_m1();
-		// main1();
-		// main2();
-		// main3();
-		// main4();
-
-		// for(var i=0;i<3;i++){
-		// 	console.log('循环 i:',i);
-		// }
+		_m2();
 	}
 }
 
-function m2() {
+function _m2() {
 	if (submit) {
 		var unsign_num = orgsheetMsg.tx_in.length - pks_num
 		if (unsign_num != 0) { // leaving to sign
@@ -465,7 +412,7 @@ function m2() {
 						}, function (err, res) {
 							loop_query_tran(res);
 						})
-					}, 10000);
+					}, 3000);
 				}
 			})
 		}
@@ -482,14 +429,11 @@ function _m1() {
 	console.log('>>> txn msg:', txn);
 	//Transaction binary2
 	var txn_payload = transbinary.compayloadTran(txn);
-	
 	//txn payload magic
 	txn_binary = message.g_binary(txn_payload, 'tx');
 	console.log('>>> txn_binary:', txn_binary, txn_binary.length, bufferhelp.bufToStr(txn_binary));
-
 	//payload  hashds excludes raw_script
 	hash_ = bitcoinjs.crypto.sha256(bitcoinjs.crypto.sha256(txn_binary.slice(24, txn_binary.length - 1)));
-
 	// console.log('>>> hash_:', hash_, hash_.length, bufferhelp.bufToStr(hash_));
 	state_info = [orgsheetMsg.sequence, txn, 'requested', hash_, orgsheetMsg.last_uocks];
 	_wait_submit.push(state_info);
@@ -498,20 +442,18 @@ function _m1() {
 	}
 }
 
-function signAllTxns(i) {
+var count = 0;
+
+function signEachTxn(i) {
+	var tx = tx_In[i];
+	var _tx = {};
 	hash_type = 1;
-	var _payload = make_payload(pks_out0, orgsheetMsg.version, orgsheetMsg.tx_in, orgsheetMsg.tx_out, 0, i, hash_type);
-	tx_In[i]._payload = _payload;
-	return getSignedTxn(tx_In[i], pushTxns).then(r => {
-		return r;
-	});
-}
-
-
-function getSignedTxn(tx, cb) {
-	var h = bitcoinjs.crypto.hash256(tx._payload);
+	
+	var _payload = make_payload(pks_out0[i], orgsheetMsg.version, tx_In, orgsheetMsg.tx_out, 0, i, hash_type);
+	// tx._payload = _payload;
+	var h = bitcoinjs.crypto.hash256(_payload);
 	var pinLen = parseInt(pseudoWallet.pin_code.length / 2);
-	var n1 = pinLen << 5
+	var n1 = pinLen << 5;
 	var s1 = n1.toString(16);
 	if (s1.length < 2) {
 		s1 += '0' + s1;
@@ -524,22 +466,22 @@ function getSignedTxn(tx, cb) {
 	return transmit(sCmd).then(res => {
 		var len = res.data.length;
 		var _sig = res.data.slice(0, len - 4);
-
 		var sig = Buffer.concat([bh.hexStrToBuffer(_sig), CHR(hash_type)]);
 		var pub_key = pseudoWallet.pub_key;
 		console.log('pub_key:', pub_key, pub_key.length);
 		var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), pub_key]);
-		console.log('sig_script:', sig_script, sig_script.length, bufferhelp.bufToStr(sig_script));
-		tx.sig_script = sig_script;
-		var v = cb && cb(tx);
-		return v;
+		count++;
+		// tx.sig_script = bufferhelp.bufToStr(sig_script);
+		_tx.sig_script = bufferhelp.bufToStr(sig_script);
+		// _tx.sig_script = sig_script;
+		_tx.prev_output = tx.prev_output;
+		_tx.sequence = tx.sequence;
+		console.log('>>>>>>> 第' + count + '次签名', 'tx:', _tx);
+		tx_ins2.push(_tx);
 	})
 }
 
-function pushTxns(tx) {
-	tx_ins2.push(tx);
-	return tx_ins2;
-}
+
 
 //参数n为休眠时间，单位为毫秒:
 function sleep(n) {
@@ -567,12 +509,14 @@ function getTxnHash(res) {
 			var info = submit_info(sn);
 			var state = info[2];
 			var txn_hash = bufferhelp.bufToStr(info[3]);
-			var last_uocks = info[4];
+			var last_uocks = bh.bufToNumer(info[4][0]);
 			if (state == 'submited' && txn_hash) {
 				var sDesc = '\nTransaction state:' + state;
 				if (last_uocks) {
-					sDesc += ',last uock: ' + last_uocks[0];
+					sDesc += ',last uock: ' + last_uocks;
+
 					console.log(sDesc);
+					console.log('Transaction hash:', txn_hash);
 				}
 			}
 			return txn_hash;
@@ -581,33 +525,35 @@ function getTxnHash(res) {
 }
 
 function loop_query_tran(res) {
-	if (res.statusCode == 400) {
+	if (res.statusCode = 200) {
+		//todo
+		var command = message.getCommand(res.body);
 		var payload = message.g_parse(res.body);
-		var msg = new bindMsg(gFormat.udpreject);
-		var sErr = msg.parse(payload, 0)[1];
-		var s = sErr['message'];
-		var b = bufferhelp.hexStrToBuffer(s);
-		var m = b.toString('latin1');
-		if (m === 'in pending state') {
-			console.log('[' + chinaTime('YYYY-MM-DD HH:mm:ss') + '] ' + ' tran_hash=' + bufferhelp.bufToStr(hash_) + ' state=pending\n');
-		} else {
-			console.log('Error: ' + s);
+		if (command == 'reject') {
+			var msg = new bindMsg(gFormat.udpreject);
+			var rejectmsg = msg.parse(payload, 0)[1];
+			var sErr = bh.hexStrToBuffer(rejectmsg.message).toString('latin1');
+			if (sErr == 'in pending state') {
+				console.log('Transaction state:pending...')
+			} else {
+				console.log('Error:', sErr);
+			}
 		}
-	} else if (res.statusCode = 200) {
-		var payload = message.g_parse(res.body);
-		var msg = new bindMsg(gFormat.udpconfirm);
-		var confirmsg = msg.parse(payload, 0)[1];
-		if (confirmsg.hash == bufferhelp.bufToStr(hash_)) {
-			// Transaction state: confirm=106, height=35208, index=1
-			var args = confirmsg['args'];
-			// var height = (args & 0xffffffff);
-			var height = bufferhelp.bufToNumer(args.slice(4, 8));
-			// var confirm = ((args >> 32) & 0xffff);
-			var confirm = bufferhelp.bufToNumer(args.slice(2, 4));
-			// var index = ((args >> 48) & 0xffff);
-			var index = bufferhelp.bufToNumer(args.slice(0, 2));
-			var state = '[' + chinaTime('YYYY-MM-DD HH:mm:ss') + '] ' + 'tran_hash=' + bufferhelp.bufToStr(hash_) + ' confirm=' + confirm + ' height=' + height + ' idx=' + index;
-			console.log(state);
+		if (command == 'confirm') {
+			var msg = new bindMsg(gFormat.udpconfirm);
+			var confirmsg = msg.parse(payload, 0)[1];
+			if (confirmsg.hash == bufferhelp.bufToStr(hash_)) {
+				// Transaction state: confirm=106, height=35208, index=1
+				var args = confirmsg['args'];
+				// var height = (args & 0xffffffff);
+				var height = bufferhelp.bufToNumer(args.slice(4, 8));
+				// var confirm = ((args >> 32) & 0xffff);
+				var confirm = bufferhelp.bufToNumer(args.slice(2, 4));
+				// var index = ((args >> 48) & 0xffff);
+				var index = bufferhelp.bufToNumer(args.slice(0, 2));
+				var state = '[' + chinaTime('YYYY-MM-DD HH:mm:ss') + '] ' + 'tran_hash=' + bufferhelp.bufToStr(hash_) + ' confirm=' + confirm + ' height=' + height + ' idx=' + index;
+				console.log(state);
+			}
 		}
 	}
 }
@@ -739,12 +685,13 @@ function make_payload(subscript, txns_ver, txns_in, txns_out, lock_time, input_i
 	// var payload = msg.binary(tx_copy, new Buffer(0));
 
 	var payload = transbinary.compayloadTran(tx_copy);
+	// console.log('>>> tx_copy payload:', bh.bufToStr(payload), bh.bufToStr(payload).length);
 	//hash_type to I
 	var hash_type_buf = bufferhelp.numToBuf(hash_type, false, 4);
 	// var s=bufferhelp.bufToStr(hash_type_buf);
 	var b = Buffer.concat([payload, hash_type_buf]);
 
-	console.log('tx_copy payload:', b, bufferhelp.bufToStr(b), b.length);
+	// console.log('tx_copy payload:', b, bufferhelp.bufToStr(b), b.length);
 	return b;
 }
 
@@ -767,72 +714,72 @@ function CHR(n) {
 
 
 //test
-// var _timer = setInterval(() => {
-// 	var _total = [{ 'name': 'xyc', 'age': 18 }, { 'name': 'zjm', 'age': 20 }];
-// 	// var _len = _total.length;
-// 	// var tx_ins2 = [];
-// 	// tx_ins_len=orgsheetMsg.tx_in.length;
-// 	if (application) {
+var _timer = setInterval(() => {
+	var _total = [{ 'name': 'xyc', 'age': 18 }, { 'name': 'zjm', 'age': 20 }];
+	// var _len = _total.length;
+	// var tx_ins2 = [];
+	// tx_ins_len=orgsheetMsg.tx_in.length;
+	if (application) {
 
-// 		function a(tx, cb) {
-// 			// console.log('执行a函数 _tx:', _tx);
-// 			return transmit(cmd_pubAddr).then(res => {
-// 				tx.sig = res.data;
-// 				var v = cb && cb(tx);
-// 				return v;
-// 			});
-// 		}
+		function a(tx, cb) {
+			// console.log('执行a函数 _tx:', _tx);
+			return transmit(cmd_pubAddr).then(res => {
+				tx.sig = res.data;
+				var v = cb && cb(tx);
+				return v;
+			});
+		}
 
-// 		function b(tx) {
-// 			// console.log('执行b函数 _tx:', tx);
-// 			tx_ins2.push(tx);
-// 			return tx_ins2;
-// 		}
+		function b(tx) {
+			console.log('执行b函数 _tx:', tx);
+			tx_ins2.push(tx);
+			// return tx_ins2;
+		}
 
-// 		function m(i) {
-// 			return a(_total[i], b).then(r => {
-// 				return r;
-// 			});
-// 		}
+		function m(i) {
+			return a(_total[i], b).then(r => {
+				return r;
+			});
+		}
 
-// 		function c(len, cb) {
-// 			if (len >= 0 && len < _total.length && cb) {
-// 				return cb(len).then(ret => {
-// 					// console.log('>>> 执行c里的回调函数最终结果:', ret);
-// 					c(len + 1, cb);
-// 					return ret;
-// 				});
-// 			} else {
-// 				console.log('循环异步完成结果:', tx_ins2, tx_ins2.length);
-// 				main1();
-// 				main2();
-// 				main3();
-// 				main4();
+		function c(len, cb) {
+			if (len >= 0 && len < _total.length && cb) {
+				return cb(len).then(ret => {
+					// console.log('>>> 执行c里的回调函数最终结果:', ret);
+					c(len + 1, cb);
+					return ret;
+				});
+			} else {
+				console.log('循环异步完成结果:', tx_ins2, tx_ins2.length);
+				main1();
+				main2();
+				main3();
+				main4();
 
-// 				for (var i = 0; i < 3; i++) {
-// 					console.log('循环 i:', i);
-// 				}
-// 			}
-// 		}
+				for (var i = 0; i < 3; i++) {
+					console.log('循环 i:', i);
+				}
+			}
+		}
 
-// 		function main1() {
-// 			console.log('main1...');
-// 		}
+		function main1() {
+			console.log('main1...');
+		}
 
-// 		function main2() {
-// 			console.log('main2...');
-// 		}
+		function main2() {
+			console.log('main2...');
+		}
 
-// 		function main3() {
-// 			console.log('main3...');
-// 		}
+		function main3() {
+			console.log('main3...');
+		}
 
-// 		function main4() {
-// 			console.log('main4...');
-// 		}
+		function main4() {
+			console.log('main4...');
+		}
 
-// 		c(0, m);
+		// c(0, m);
 
-// 		clearInterval(_timer);
-// 	}
-// }, 2000);
+		clearInterval(_timer);
+	}
+}, 2000);

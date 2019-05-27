@@ -1,20 +1,10 @@
+var bh=require('./bufferhelp');
 
-function a(cb) {
-	console.log('a');
-	var v;
-	setTimeout(() => {
-		console.log('a的延迟');
-		if (cb) { v = cb(); }
-	}, 1000);
-	return v;
-}
+var s0='63616e206e6f742066696e64207472616e73616374696f6e';
 
-function b() {
-	console.log('b');
-	return '123';
-}
+var s1=bh.hexStrToBuffer(s0);
 
-// a();
-// b();
-var s = a(b);
-console.log(s);
+var s2=s1.toString('latin1');
+
+var a=1;
+
