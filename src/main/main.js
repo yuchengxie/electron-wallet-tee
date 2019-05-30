@@ -40,7 +40,9 @@ var pseudoWallet;
 
 var WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
 // var WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
-
+ipcMain.on('teeAddr', function (event, data) {
+    event.sender.send('replyteeAddr', pseudoWallet.pub_addr);
+});
 
 ipcMain.on('getpass', function (event, data) {
     console.log('>>> getpass:', data);
@@ -63,7 +65,7 @@ ipcMain.on('getpass', function (event, data) {
                 event.sender.send('replaygetpass', result);
             })
         } catch (error) {
-            
+
         }
     }
 })
@@ -220,7 +222,7 @@ ipcMain.on('info', function (event, data) {
                 var value = m['value'];
                 var uock = m['uock'];
                 //handle uock
-                found_item.uock = uock;
+                found_item.uock = bh.bufToStr(uock);
                 found_item.height = height;
                 found_item.value = value;
                 arrfound.push(found_item);
@@ -268,8 +270,35 @@ ipcMain.on('utxo', function (event, data) {
     )
 })
 
-ipcMain.on('transfer', function (event, data) {
+var tran_event;
+ipcMain.on('transfer', function (event, res) {
+    tran_event = event;
     console.log(data);
+    //verify password 
+    var data = res[3];
+    if (data) {
+        try {
+            var scmd = '00200000' + '0' + parseInt(data.length / 2) + data;
+            transmit(scmd).then(res => {
+                var result = '';
+                if (res.data == '9000') {
+                    result = 'verify password successful.';
+                    // pseudoWallet.pin_code = data[1];
+                    query_sheet('', '');
+                } else {
+                    if (res.data.slice(0, 3) == '63c') {
+                        result = 'incorrect password, left try count: ' + res.data.slice(3);
+                    } else {
+                        result = 'verify password failed.';
+                    }
+                    event.sender.send('replaygetpass', result);
+                }
+
+            })
+        } catch (error) {
+
+        }
+    }
     // query_sheet('', '');
     // transfer.query_sheet('', '');
 })
@@ -314,45 +343,6 @@ function utxoScript(msg) {
         }
     }
     return msg;
-}
-
-function PseudoWallet(pubkey, pubHash, pubAddr, vcn = 0) {
-    this.pubkey = pubkey;
-    this.pub_hash = pubHash;
-    this.pub_addr = pubAddr;
-    this._vcn = vcn;
-    this.coin_type = 0x00; // fixed to '00'
-    this.pin_code = '000000'; //always reset to '000000'
-}
-
-PseudoWallet.prototype.address = function () {
-    return this.pub_addr;
-}
-
-PseudoWallet.prototype.publicHash = function () {
-    return this.pub_hash;
-}
-
-PseudoWallet.prototype.publicKey = function () {
-    return this.pub_key;
-}
-
-function teesign(payload) {
-    var h = bitcoinjs.crypto.hash256(buf);
-
-}
-
-function _startMing() {
-    var gPseudoWallet, gPoetClient;
-    try {
-        pubKey = getPubKey()
-        pubHash = getPubKeyHash()
-    } catch (err) {
-        console.log('warning: start mining failed (invalid account)');
-        return;
-    }
-    //todo
-    console.log('mining task starting ...')
 }
 
 // device - card
@@ -440,6 +430,52 @@ function str_commandApdu(s) {
     return new CommandApdu({ bytes: hexify.toByteArray(s) })
 }
 
+function PseudoWallet(pubKey, pubHash, pubAddr, vcn = 0) {
+    // this.pubkey = pubkey;
+    this.pub_key = utilkey.compress_public_key(pubKey);
+    this.pub_hash = pubHash;
+    this.pub_addr = pubAddr;
+    var b_pub_hash = bh.hexStrToBuffer(this.pub_hash);
+    this._vcn = ((b_pub_hash[30]) << 8) + b_pub_hash[31];
+    this.coin_type = 0x00; // fixed to '00'
+    this.pin_code = '000000'; //always reset to '000000'
+    // this.pub_addr2 = utilkey.publickey_to_address(this.pub_key, this._vcn, this.coin_type, 0x00);
+}
+
+
+PseudoWallet.prototype.teeSign = function (payload) {
+    var h = bitcoinjs.crypto.hash256(payload);
+    var pinLen = parseInt(this.pin_code.length / 2);
+    var n1 = pinLen << 5
+    var s1 = n1.toString(16);
+    if (s1.length < 2) {
+        s1 += '0' + s1;
+    }
+    var s2 = (pinLen + 32).toString(16);
+    if (s2.length < 2) {
+        s2 += '0' + s;
+    }
+    sCmd = '802100' + s1 + s2 + this.pin_code + bh.bufToStr(h);
+    return transmit(sCmd).then(res => {
+        var len = res.data.length;
+        return res.data.slice(0, len - 4);
+    })
+}
+
+
+PseudoWallet.prototype.address = function () {
+    return this.pub_addr;
+}
+
+PseudoWallet.prototype.publicHash = function () {
+    return this.pub_hash;
+}
+
+PseudoWallet.prototype.publicKey = function () {
+    return this.pub_key;
+}
+
+
 function TeeMiner(pubHash) {
     this.SUCC_BLOCKS_MAX = 256;
     this.succ_blocks = [];
@@ -480,50 +516,55 @@ function timest() {
 }
 
 
+// var dhttp = require('dhttp');
+// var message = require('./message');
+// var gFormat = require('./format');
+// var Wallet = require('./wallet');
+// const bh = require('./bh');
+// const sha256 = require('js-sha256');
+// const bitcoinjs = require('bitcoinjs-lib')
+// const bs58 = require('bs58');
+// const makesheetbinary = require('./makesheet');
+// const transbinary = require('./transaction');
+// const chinaTime = require('china-time');
+// const opscript = require('./op/script');
+
 var bindMsg = message.bindMsg;
 var seq = 0;
 var pks_num = 0;
-// var WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
-var WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
+
+//国内
+var WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
+// var WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';//路由节点
 
 //交易测试
 
 var command_type = 'makesheet';
 var magic = Buffer.from([0xf9, 0x6e, 0x62, 0x74]);
 
-var sequence = 0, makesheet, orgsheetMsg, _wait_submit = [], SHEET_CACHE_SIZE = 16, txn_binary, hash_, state_info, sn;
-
-// var makesheet;
-// var orgsheetMsg;
-// var _wait_submit = [];
-// var SHEET_CACHE_SIZE = 16;
-// var wallet;
-// var txn_binary;
-// var hash_;
-// var state_info;
-// var sn;
-// var submit = true;
+var sequence = 0, makesheet, orgsheetMsg, _wait_submit = [], SHEET_CACHE_SIZE = 16, txn_binary, hash_, state_info, sn, tx_ins2 = [], tx_ins_len, pks_out0, hash_type = 1, submit = true;
 
 function verify(addr) {
     if (addr.length <= 32) {
-        // throw Error('invalid address');
+        throw Error('invalid address');
         return false;
     };
     for (var i = 0; i < addr.length; i++) {
         var ch = addr[i];
         if (_BASE58_CHAR.indexOf(ch) == -1) {
-            // throw Error('invalid address');
-            return false;
+            throw Error('invalid address');
         }
     }
     return true;
 }
+
 function FlexTxn() {
     this.version = 0;
     this.tx_in = [];
     this.tx_out = [];
     this.lock_time = 0;
 }
+
 function Transaction() {
     this.version = 0;
     this.tx_in = [];
@@ -531,11 +572,13 @@ function Transaction() {
     this.lock_time = 0;
     this.sig_raw = '';
 }
+
 function TxnIn() {
     this.prev_output = '';
     this.sig_script = '';
     this.sequence = 0;
 }
+
 function MakeSheet() {
     this.vcn = 0;
     this.sequence = 0;
@@ -547,6 +590,7 @@ function MakeSheet() {
     this.sort_flag = 0;
     this.last_uocks = [];
 }
+
 function PayFrom() {
     this.value = 0;
     this.address = '';
@@ -561,19 +605,13 @@ function getWaitSubmit(res) {
     var s = bh.bufToStr(resbuf);
     console.log('>>> 接收数据1:', resbuf, s, s.length);
     var payload = message.g_parse(resbuf);
-    console.log('payload:', payload, payload.length);
+    // console.log('payload:', payload, payload.length);
     var msg = new bindMsg(gFormat.orgsheet);
 
     orgsheetMsg = msg.parse(payload, 0)[1];
     console.log('>>>>>> orgsheetMsg:', orgsheetMsg);
-    // pseudoWallet.pubHash
-    // wallet = new Wallet();
-    // var pubkeybuf = wallet.getPubKeyBuf();
-    // var pubichash = wallet.publickey_to_hash(pubkeybuf);
-    //check pay_to balance
-    // var coin_hash = Buffer.concat([bh.hexStrToBuffer(pseudoWallet.pubHash), Buffer([0x00])]);
-    var coin_hash = '';
-
+    var pubHash = pseudoWallet.pub_hash;
+    var coin_hash = Buffer.concat([bh.hexStrToBuffer(pubHash), Buffer([0x00])]);
     var d = {};
     var payto = makesheet.pay_to;
     for (var i = 0; i < payto.length; i++) {
@@ -595,15 +633,18 @@ function getWaitSubmit(res) {
         if (!addr) {
             console.log('Error: invalid output address (idx=)', idx);
         } else {
-            value_ = d[addr];
+            var value_ = d[addr];
+
             if (item.value != value_) {
                 if (value_ == undefined && addr.slice(4) == bh.bufToStr(coin_hash)) {
 
                 } else {
                     console.log('Error: invalid output value (idx=)', idx);
+                    // return 0;
                 }
             }
             delete d[addr];
+
         }
     }
 
@@ -615,36 +656,124 @@ function getWaitSubmit(res) {
         return 0;
     }
 
-    var pks_out0 = orgsheetMsg.pks_out[0].items;
-    pks_num = orgsheetMsg.pks_out.length;
-    var tx_ins2 = [];
+    // pks_out0 = orgsheetMsg.pks_out;
+    // pks_num = orgsheetMsg.pks_out.length;
+    var pks_out = orgsheetMsg.pks_out;
+    pks_out0 = [];
+    for (var v in pks_out) {
+        pks_out0.push(pks_out[v]['items']);
+    }
+    pks_num = pks_out0.length;
+    // pks_num = orgsheetMsg.pks_out.length;
+
     var tx_In = orgsheetMsg.tx_in;
-    for (var idx = 0; idx < tx_In.length; idx++) {
-        var tx_in = tx_In[idx];
-        // # sign every inputs
-        if (idx < pks_num) {
-            var hash_type = 1;
-            //transaction
-            var payload = make_payload(pks_out0, orgsheetMsg.version, orgsheetMsg.tx_in, orgsheetMsg.tx_out, 0, idx, hash_type)  //lock_time=0
-            //签名
-            console.log('>>> ready sign payload:', payload, bh.bufToStr(payload), payload.length);
-            // var sig = Buffer.concat([wallet.sign(payload), CHR(hash_type)]);
-            var sig = Buffer.concat([sign(payload), CHR(hash_type)]);
-            console.log('sig:', sig, sig.length, bh.bufToStr(sig));
-            var pub_key = wallet.getPubKeyBuf();
-            console.log('pub_key:', pub_key, pub_key.length);
-            var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), pub_key]);
-            console.log('sig_script:', sig_script, sig_script.length, bh.bufToStr(sig_script));
-            var txin = new TxnIn();
-            // tx_in.prev_output, sig_script, tx_in.sequence
-            txin.prev_output = tx_in.prev_output;
-            txin.sig_script = bh.bufToStr(sig_script);
-            txin.sequence = tx_in.sequence;
-            tx_ins2.push(txin);
+    var _len = tx_In.length;
+
+    getAllSingedTxns(0, signEachTxn);
+
+    function getAllSingedTxns(len, cb) {
+        if (len >= 0 && len < _len && cb) {
+            return cb(len).then(ret => {
+                getAllSingedTxns(len + 1, cb);
+                return ret;
+            });
+        } else {
+            console.log('tx_ins2:', tx_ins2, tx_ins2.length);
+            _m1();
+            _m2();
         }
     }
-    console.log('tx_ins2:', tx_ins2, tx_ins2.length);
 
+    function signEachTxn(i) {
+        var tx = tx_In[i];
+        var _tx = new TxnIn();
+        hash_type = 1;
+
+        var _payload = make_payload(pks_out0[i], orgsheetMsg.version, tx_In, orgsheetMsg.tx_out, 0, i, hash_type);
+        var h = bitcoinjs.crypto.sha256(_payload);
+        var pinLen = parseInt(pseudoWallet.pin_code.length / 2);
+        var n1 = pinLen << 5;
+        var s1 = n1.toString(16);
+        if ((s1.length & 0x01) == 1) {
+            s1 += '0' + s1;
+        }
+        var s2 = (pinLen + 32).toString(16);
+        if ((s2.length & 0x01) == 0x01) {
+            s2 += '0' + s2;
+        }
+        var sCmd = '802100' + s1 + s2 + pseudoWallet.pin_code + bh.bufToStr(h);
+        return transmit(sCmd).then(res => {
+            var len = res.data.length;
+            var _sig = res.data.slice(0, len - 4);  // should conside 9000
+            var sig = Buffer.concat([bh.hexStrToBuffer(_sig), CHR(hash_type)]);
+            var pub_key = pseudoWallet.pub_key;
+            console.log('pub_key:', pub_key, pub_key.length);
+            var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), pub_key]);
+            count++;
+            // tx.sig_script = bh.bufToStr(sig_script);
+            _tx.sig_script = bh.bufToStr(sig_script);
+            // _tx.sig_script = sig_script;
+            _tx.prev_output = tx.prev_output;
+            _tx.sequence = tx.sequence;
+            console.log('>>>>>>> 第' + count + '次签名', 'tx:', _tx);
+            tx_ins2.push(_tx);
+        })
+    }
+}
+
+// function getAllSingedTxns(len, cb) {
+// 	if (len >= 0 && len < _len && cb) {
+// 		return cb(len).then(ret => {
+// 			getAllSingedTxns(len + 1, cb);
+// 			return ret;
+// 		});
+// 	} else {
+// 		console.log('tx_ins2:', tx_ins2, tx_ins2.length);
+// 		_m1();
+// 		_m2();
+// 	}
+// }
+
+function _m2() {
+    if (submit) {
+        var unsign_num = orgsheetMsg.tx_in.length - pks_num
+        if (unsign_num != 0) { // leaving to sign
+            console.log('Warning: some input not signed: %i', unsign_num);
+            //return 0
+        } else {
+            var URL = WEB_SERVER_ADDR + '/txn/sheets/txn';
+            dhttp({
+                method: 'POST',
+                url: URL,
+                body: txn_binary
+            }, function (err, res) {
+                if (err) throw ('err txn/sheets/txn');
+                console.log('txn_binary:', txn_binary, txn_binary.length, bh.bufToStr(txn_binary));
+                console.log('>>> msg3', res.body);
+                if (res.statusCode && res.statusCode == 200) {
+                    var txn_hash = getTxnHash(res);
+                } else {
+                    console.log('err 400 txn/sheets/txn');
+                    return;
+                }
+
+                if (txn_hash) {
+                    var url = WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txn_hash;
+                    setInterval(() => {
+                        dhttp({
+                            method: 'GET',
+                            url: url,
+                        }, function (err, res) {
+                            loop_query_tran(res);
+                        })
+                    }, 10000);
+                }
+            })
+        }
+    }
+}
+
+function _m1() {
     var txn = new Transaction();
     txn.version = orgsheetMsg.version;
     txn.tx_in = tx_ins2;
@@ -654,19 +783,32 @@ function getWaitSubmit(res) {
     console.log('>>> txn msg:', txn);
     //Transaction binary2
     var txn_payload = transbinary.compayloadTran(txn);
+    // var m = new bindMsg(gFormat.transaction);
+    // var msg3 = m.binary(payload, 0)[1];
 
     //txn payload magic
     txn_binary = message.g_binary(txn_payload, 'tx');
-    console.log('>>> txn_binary:', txn_binary, txn_binary.length, bh.bufToStr(txn_binary));
-
+    console.log('>>> txn_binary:', txn_binary, bh.bufToStr(txn_binary), bh.bufToStr(txn_binary).length);
     //payload  hashds excludes raw_script
     hash_ = bitcoinjs.crypto.sha256(bitcoinjs.crypto.sha256(txn_binary.slice(24, txn_binary.length - 1)));
-
     // console.log('>>> hash_:', hash_, hash_.length, bh.bufToStr(hash_));
     state_info = [orgsheetMsg.sequence, txn, 'requested', hash_, orgsheetMsg.last_uocks];
     _wait_submit.push(state_info);
     while (_wait_submit.length > SHEET_CACHE_SIZE) {
         _wait_submit.remove(_wait_submit[0]);
+    }
+}
+
+var count = 0;
+
+//参数n为休眠时间，单位为毫秒:
+function sleep(n) {
+    var start = new Date().getTime();
+    //  console.log('休眠前：' + start);
+    while (true) {
+        if (new Date().getTime() - start > n) {
+            break;
+        }
     }
 }
 
@@ -685,12 +827,14 @@ function getTxnHash(res) {
             var info = submit_info(sn);
             var state = info[2];
             var txn_hash = bh.bufToStr(info[3]);
-            var last_uocks = info[4];
+            var last_uocks = bh.bufToNumer(info[4][0]);
             if (state == 'submited' && txn_hash) {
                 var sDesc = '\nTransaction state:' + state;
                 if (last_uocks) {
-                    sDesc += ',last uock: ' + last_uocks[0];
+                    sDesc += ',last uock: ' + last_uocks;
+
                     console.log(sDesc);
+                    console.log('Transaction hash:', txn_hash);
                 }
             }
             return txn_hash;
@@ -699,34 +843,41 @@ function getTxnHash(res) {
 }
 
 function loop_query_tran(res) {
-    if (res.statusCode == 400) {
+    var state = '';
+    if (res.statusCode && res.statusCode == 200) {
+        //todo
+        var command = message.getCommand(res.body);
         var payload = message.g_parse(res.body);
-        var msg = new bindMsg(gFormat.udpreject);
-        var sErr = msg.parse(payload, 0)[1];
-        var s = sErr['message'];
-        var b = bh.hexStrToBuffer(s);
-        var m = b.toString('latin1');
-        if (m === 'in pending state') {
-            console.log('[' + chinaTime('YYYY-MM-DD HH:mm:ss') + '] ' + ' tran_hash=' + bh.bufToStr(hash_) + ' state=pending\n');
-        } else {
-            console.log('Error: ' + s);
+        if (command == 'reject') {
+            var msg = new bindMsg(gFormat.udpreject);
+            var rejectmsg = msg.parse(payload, 0)[1];
+            var sErr = bh.hexStrToBuffer(rejectmsg.message).toString('latin1');
+            if (sErr == 'in pending state') {
+                state = 'pending...';
+                console.log('pending...');
+            } else {
+                state = 'Error:' + sErr;
+                console.log('Error:', sErr);
+            }
         }
-    } else if (res.statusCode = 200) {
-        var payload = message.g_parse(res.body);
-        var msg = new bindMsg(gFormat.udpconfirm);
-        var confirmsg = msg.parse(payload, 0)[1];
-        if (confirmsg.hash == bh.bufToStr(hash_)) {
-            // Transaction state: confirm=106, height=35208, index=1
-            var args = confirmsg['args'];
-            // var height = (args & 0xffffffff);
-            var height = bh.bufToNumer(args.slice(4, 8));
-            // var confirm = ((args >> 32) & 0xffff);
-            var confirm = bh.bufToNumer(args.slice(2, 4));
-            // var index = ((args >> 48) & 0xffff);
-            var index = bh.bufToNumer(args.slice(0, 2));
-            var state = '[' + chinaTime('YYYY-MM-DD HH:mm:ss') + '] ' + 'tran_hash=' + bh.bufToStr(hash_) + ' confirm=' + confirm + ' height=' + height + ' idx=' + index;
-            console.log(state);
+        if (command == 'confirm') {
+            var msg = new bindMsg(gFormat.udpconfirm);
+            var confirmsg = msg.parse(payload, 0)[1];
+            if (confirmsg.hash == bh.bufToStr(hash_)) {
+                // Transaction state: confirm=106, height=35208, index=1
+                var args = confirmsg['args'];
+                // var height = (args & 0xffffffff);
+                var height = bh.bufToNumer(args.slice(4, 8));
+                // var confirm = ((args >> 32) & 0xffff);
+                var confirm = bh.bufToNumer(args.slice(2, 4));
+                // var index = ((args >> 48) & 0xffff);
+                var index = bh.bufToNumer(args.slice(0, 2));
+                state = '[' + chinaTime('YYYY-MM-DD HH:mm:ss') + '] ' + 'tran_hash=' + bh.bufToStr(hash_) + ' confirm=' + confirm + ' height=' + height + ' idx=' + index;
+                console.log(state);
+            }
         }
+        tran_event.sender.send('transresult', state);
+
     }
 }
 
@@ -741,8 +892,8 @@ function query_sheet(pay_to, from_uocks) {
     var submit = true;
     var buf = prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo, sort_flag, from_uocks);
 
-    console.log('>>> 发送数据:', buf, buf.length, bh.bufToStr(buf))
-    // submit_txn_(buf, submit)s
+    console.log('>>> 发送数据1:', buf, buf.length, bh.bufToStr(buf))
+    // submit_txn_(buf, submit)
 
     var URL = WEB_SERVER_ADDR + '/txn/sheets/sheet';
     dhttp({
@@ -755,45 +906,7 @@ function query_sheet(pay_to, from_uocks) {
             return;
         };
         getWaitSubmit(res);
-
-        if (submit) {
-            var unsign_num = orgsheetMsg.tx_in.length - pks_num
-            if (unsign_num != 0) { // leaving to sign
-                console.log('Warning: some input not signed: %i', unsign_num);
-                //return 0
-            } else {
-                var URL = WEB_SERVER_ADDR + '/txn/sheets/txn';
-                dhttp({
-                    method: 'POST',
-                    url: URL,
-                    body: txn_binary
-                }, function (err, res) {
-                    if (err) throw ('err txn/sheets/txn');
-                    console.log('txn_binary:', txn_binary, txn_binary.length, bh.bufToStr(txn_binary));
-                    console.log('>>> msg3', res.body);
-                    if (res.statusCode == 200) {
-                        var txn_hash = getTxnHash(res);
-                    } else {
-                        console.log('err 400 txn/sheets/txn');
-                        return;
-                    }
-
-                    if (txn_hash) {
-                        var url = WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txn_hash;
-                        setInterval(() => {
-                            dhttp({
-                                method: 'GET',
-                                url: url,
-                            }, function (err, res) {
-                                loop_query_tran(res);
-                            })
-                        }, 10000);
-                    }
-                })
-            }
-        }
     })
-    // console.log('seq:', seq);
 }
 
 function submit_info(sn) {
@@ -812,7 +925,7 @@ function prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo, s
     var pay_from = [];
     var pay_from1 = new PayFrom();
     pay_from1.value = 0;
-    pay_from1.address = '1118Mi5XxqmqTBp7TnPQd1Hk9XYagJQpDcZu6EiGE1VbXHAw9iZGPV';
+    pay_from1.address = pseudoWallet.pub_addr;
     pay_from.push(pay_from1);
 
     var pay_to = [];
@@ -822,7 +935,7 @@ function prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo, s
     pay_to.push(pay_to1);
 
     makesheet = new MakeSheet();
-    makesheet.vcn = 0;
+    makesheet.vcn = pseudoWallet._vcn;
     makesheet.sequence = sequence;
     makesheet.pay_from = pay_from;
     makesheet.pay_to = pay_to;
@@ -832,6 +945,7 @@ function prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo, s
     makesheet.sort_flag = sort_flag;
     // makesheet.from_uocks=from_uocks;
     makesheet.last_uocks = [0];
+    console.log('>>> 发送msg1:', makesheet);
     return submit_txn_(makesheet, submit);
 }
 
@@ -873,7 +987,6 @@ function make_payload(subscript, txns_ver, txns_in, txns_out, lock_time, input_i
 
             tx_in.sig_script = script;
             tx_ins.push(tx_in);
-
         }
         tx_outs = txns_out;
     }
@@ -895,12 +1008,14 @@ function make_payload(subscript, txns_ver, txns_in, txns_out, lock_time, input_i
     // var payload = msg.binary(tx_copy, new Buffer(0));
 
     var payload = transbinary.compayloadTran(tx_copy);
+
+    console.log('>>> tx_copy payload:', bh.bufToStr(payload), bh.bufToStr(payload).length);
     //hash_type to I
     var hash_type_buf = bh.numToBuf(hash_type, false, 4);
     // var s=bh.bufToStr(hash_type_buf);
     var b = Buffer.concat([payload, hash_type_buf]);
 
-    console.log('tx_copy payload:', b, bh.bufToStr(b), b.length);
+    // console.log('tx_copy payload:', b, bh.bufToStr(b), b.length);
     return b;
 }
 
@@ -916,9 +1031,10 @@ function decode_check(v) {
 
 function CHR(n) {
     var buf = new Buffer(1);
-    buf.writeInt8(n);
+    buf.writeUIntLE(n);
     return buf;
 }
+
 
 function Newborntoken() {
     this.COINBASE_MATURITY = 8

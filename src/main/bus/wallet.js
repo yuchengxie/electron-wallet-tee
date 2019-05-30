@@ -202,7 +202,7 @@ function sign(buf) {
     var keyPair = bitcoinjs.ECPair.fromWIF(wif);//sign with prvkey
     // var signature = keyPair.sign(hash).toDER(); // ECSignature对象
     var signature = keyPair.sign(hash).toDER(); // ECSignature对象
-
+    
     console.log('>>> sign', signature, bufferhelp.bufToStr(signature));
     console.log('>>> payload转换hash:\n', hash.length, bufferhelp.bufToStr(hash));
     console.log('>>> 公钥:\n', keyPair.getPublicKeyBuffer().toString('hex'));

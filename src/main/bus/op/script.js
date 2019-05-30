@@ -68,7 +68,7 @@ function _process(str_script) {
     }
     this._tokens = _tokens;
     var output = [];
-    for (k1 in _tokens) {
+    for (var k1 in _tokens) {
         var t = _tokens[k1];
         if (t[0] == OP_LITERAL) {
             output.push(t[2]);

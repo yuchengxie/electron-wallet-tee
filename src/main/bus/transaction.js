@@ -5,7 +5,7 @@ function compayloadTran(msg) {
     var a = new Buffer(0);
     var b;
     
-    for (var name in msg) {
+    for (var name in msg) {  // msg should be: [(attr1,value),(attr2,value), ...]
         if (name === 'version') {
             dftNumberI(msg['version']);//4
         }
@@ -32,7 +32,6 @@ function compayloadTran(msg) {
                 var pk_script = tx_out['pk_script'];
                 dftVarString(pk_script);//41
             }
-
         }
     }
 
@@ -52,7 +51,6 @@ function compayloadTran(msg) {
                 var sequence = tx_in['sequence'];
                 dftNumberI(sequence);//4
             }
-
         }
     }
 

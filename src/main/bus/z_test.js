@@ -35,11 +35,11 @@ function PseudoWallet(pubKey, pubHash, pubAddr, vcn = 0) {
 	this.pub_key = utilkey.compress_public_key(pubKey);
 	this.pub_hash = pubHash;
 	this.pub_addr = pubAddr;
-	this._vcn = vcn;
+	var b_pub_hash = bufferhelp.hexStrToBuffer(this.pub_hash);
+	this._vcn = ((b_pub_hash[30]) << 8) + b_pub_hash[31];
 	this.coin_type = 0x00; // fixed to '00'
 	this.pin_code = '000000'; //always reset to '000000'
-	this.pub_addr2 = utilkey.publickey_to_address(this.pub_key, vcn, this.coin_type, 0x00);
-	var c = 1;
+	// this.pub_addr2 = utilkey.publickey_to_address(this.pub_key, this._vcn, this.coin_type, 0x00);
 }
 
 
@@ -62,49 +62,6 @@ PseudoWallet.prototype.teeSign = function (payload) {
 	})
 }
 
-let loginReq = new Promise((resolve, reject) => {
-	setTimeout(function () {
-		resolve({ success: true })
-	}, 2000)
-});
-
-let userInfoReq = new Promise((resolve, reject) => {
-	setTimeout(function () {
-		resolve({ nickName: 'dounine' })
-	}, 2000)
-});
-
-// co(function* () {
-// 	let loginInfo = yield loginReq;
-// 	if (loginInfo.success) {
-// 		let userInfo = yield userInfoReq;
-// 		console.log('获取成功')
-// 	}
-// })
-
-let demo = async function () {
-	let url = "http://www.baidu.com/";
-	let body = await synchronous_post(url);
-	console.log(body);
-}
-
-let synchronous_post = function (url, params) {
-
-	let options = {
-		url: url,
-		form: params
-	};
-
-	return new Promise(function (resolve, reject) {
-		request.get(options, function (error, response, body) {
-			if (error) {
-				reject(error);
-			} else {
-				resolve(body);
-			}
-		});
-	});
-}
 
 PseudoWallet.prototype.address = function () {
 	return this.pub_addr;
@@ -238,7 +195,7 @@ var WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
 var command_type = 'makesheet';
 var magic = Buffer.from([0xf9, 0x6e, 0x62, 0x74]);
 
-var sequence = 0, makesheet, orgsheetMsg, _wait_submit = [], SHEET_CACHE_SIZE = 16, txn_binary, hash_, state_info, sn, tx_ins2 = [], tx_ins_len, tx_In, pks_out0, _len, hash_type = 1, submit = true;
+var sequence = 0, makesheet, orgsheetMsg, _wait_submit = [], SHEET_CACHE_SIZE = 16, txn_binary, hash_, state_info, sn, tx_ins2 = [], tx_ins_len, pks_out0, hash_type = 1, submit = true;
 
 function verify(addr) {
 	if (addr.length <= 32) {
@@ -301,9 +258,9 @@ function getWaitSubmit(res) {
 	var s = bufferhelp.bufToStr(resbuf);
 	console.log('>>> 接收数据1:', resbuf, s, s.length);
 	var payload = message.g_parse(resbuf);
-	console.log('payload:', payload, payload.length);
+	// console.log('payload:', payload, payload.length);
 	var msg = new bindMsg(gFormat.orgsheet);
-
+	
 	orgsheetMsg = msg.parse(payload, 0)[1];
 	console.log('>>>>>> orgsheetMsg:', orgsheetMsg);
 	var pubHash = pseudoWallet.pub_hash;
@@ -362,23 +319,73 @@ function getWaitSubmit(res) {
 	pks_num = pks_out0.length;
 	// pks_num = orgsheetMsg.pks_out.length;
 
-	tx_In = orgsheetMsg.tx_in;
-	_len = tx_In.length;
-	getAllSingedTxns(0, signEachTxn);
-}
+	var tx_In = orgsheetMsg.tx_in;
+	var _len = tx_In.length;
 
-function getAllSingedTxns(len, cb) {
-	if (len >= 0 && len < _len && cb) {
-		return cb(len).then(ret => {
-			getAllSingedTxns(len + 1, cb);
-			return ret;
-		});
-	} else {
-		console.log('tx_ins2:', tx_ins2, tx_ins2.length);
-		_m1();
-		_m2();
+	getAllSingedTxns(0, signEachTxn);
+	
+	function getAllSingedTxns(len, cb) {
+		if (len >= 0 && len < _len && cb) {
+			return cb(len).then(ret => {
+				getAllSingedTxns(len + 1, cb);
+				return ret;
+			});
+		} else {
+			console.log('tx_ins2:', tx_ins2, tx_ins2.length);
+			_m1();
+			_m2();
+		}
+	}
+
+	function signEachTxn(i) {
+		var tx = tx_In[i];
+		var _tx = new TxnIn();
+		hash_type = 1;
+
+		var _payload = make_payload(pks_out0[i], orgsheetMsg.version, tx_In, orgsheetMsg.tx_out, 0, i, hash_type);
+		var h = bitcoinjs.crypto.sha256(_payload);
+		var pinLen = parseInt(pseudoWallet.pin_code.length / 2);
+		var n1 = pinLen << 5;
+		var s1 = n1.toString(16);
+		if ((s1.length & 0x01) == 1) {
+			s1 += '0' + s1;
+		}
+		var s2 = (pinLen + 32).toString(16);
+		if ((s2.length & 0x01) == 0x01) {
+			s2 += '0' + s2;
+		}
+		sCmd = '802100' + s1 + s2 + pseudoWallet.pin_code + bh.bufToStr(h);
+		return transmit(sCmd).then(res => {
+			var len = res.data.length;
+			var _sig = res.data.slice(0, len - 4);  // should conside 9000
+			var sig = Buffer.concat([bh.hexStrToBuffer(_sig), CHR(hash_type)]);
+			var pub_key = pseudoWallet.pub_key;
+			console.log('pub_key:', pub_key, pub_key.length);
+			var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), pub_key]);
+			count++;
+			// tx.sig_script = bufferhelp.bufToStr(sig_script);
+			_tx.sig_script = bufferhelp.bufToStr(sig_script);
+			// _tx.sig_script = sig_script;
+			_tx.prev_output = tx.prev_output;
+			_tx.sequence = tx.sequence;
+			console.log('>>>>>>> 第' + count + '次签名', 'tx:', _tx);
+			tx_ins2.push(_tx);
+		})
 	}
 }
+
+// function getAllSingedTxns(len, cb) {
+// 	if (len >= 0 && len < _len && cb) {
+// 		return cb(len).then(ret => {
+// 			getAllSingedTxns(len + 1, cb);
+// 			return ret;
+// 		});
+// 	} else {
+// 		console.log('tx_ins2:', tx_ins2, tx_ins2.length);
+// 		_m1();
+// 		_m2();
+// 	}
+// }
 
 function _m2() {
 	if (submit) {
@@ -412,7 +419,7 @@ function _m2() {
 						}, function (err, res) {
 							loop_query_tran(res);
 						})
-					}, 3000);
+					}, 10000);
 				}
 			})
 		}
@@ -429,9 +436,12 @@ function _m1() {
 	console.log('>>> txn msg:', txn);
 	//Transaction binary2
 	var txn_payload = transbinary.compayloadTran(txn);
+	// var m = new bindMsg(gFormat.transaction);
+	// var msg3 = m.binary(payload, 0)[1];
+
 	//txn payload magic
 	txn_binary = message.g_binary(txn_payload, 'tx');
-	console.log('>>> txn_binary:', txn_binary, txn_binary.length, bufferhelp.bufToStr(txn_binary));
+	console.log('>>> txn_binary:', txn_binary, bufferhelp.bufToStr(txn_binary), bufferhelp.bufToStr(txn_binary).length);
 	//payload  hashds excludes raw_script
 	hash_ = bitcoinjs.crypto.sha256(bitcoinjs.crypto.sha256(txn_binary.slice(24, txn_binary.length - 1)));
 	// console.log('>>> hash_:', hash_, hash_.length, bufferhelp.bufToStr(hash_));
@@ -443,45 +453,6 @@ function _m1() {
 }
 
 var count = 0;
-
-function signEachTxn(i) {
-	var tx = tx_In[i];
-	var _tx = {};
-	hash_type = 1;
-	
-	var _payload = make_payload(pks_out0[i], orgsheetMsg.version, tx_In, orgsheetMsg.tx_out, 0, i, hash_type);
-	// tx._payload = _payload;
-	var h = bitcoinjs.crypto.hash256(_payload);
-	var pinLen = parseInt(pseudoWallet.pin_code.length / 2);
-	var n1 = pinLen << 5;
-	var s1 = n1.toString(16);
-	if (s1.length < 2) {
-		s1 += '0' + s1;
-	}
-	var s2 = (pinLen + 32).toString(16);
-	if (s2.length < 2) {
-		s2 += '0' + s;
-	}
-	sCmd = '802100' + s1 + s2 + pseudoWallet.pin_code + bh.bufToStr(h);
-	return transmit(sCmd).then(res => {
-		var len = res.data.length;
-		var _sig = res.data.slice(0, len - 4);
-		var sig = Buffer.concat([bh.hexStrToBuffer(_sig), CHR(hash_type)]);
-		var pub_key = pseudoWallet.pub_key;
-		console.log('pub_key:', pub_key, pub_key.length);
-		var sig_script = Buffer.concat([CHR(sig.length), sig, CHR(pub_key.length), pub_key]);
-		count++;
-		// tx.sig_script = bufferhelp.bufToStr(sig_script);
-		_tx.sig_script = bufferhelp.bufToStr(sig_script);
-		// _tx.sig_script = sig_script;
-		_tx.prev_output = tx.prev_output;
-		_tx.sequence = tx.sequence;
-		console.log('>>>>>>> 第' + count + '次签名', 'tx:', _tx);
-		tx_ins2.push(_tx);
-	})
-}
-
-
 
 //参数n为休眠时间，单位为毫秒:
 function sleep(n) {
@@ -534,7 +505,7 @@ function loop_query_tran(res) {
 			var rejectmsg = msg.parse(payload, 0)[1];
 			var sErr = bh.hexStrToBuffer(rejectmsg.message).toString('latin1');
 			if (sErr == 'in pending state') {
-				console.log('Transaction state:pending...')
+				console.log('Transaction state :pending...')
 			} else {
 				console.log('Error:', sErr);
 			}
@@ -569,8 +540,8 @@ function query_sheet(pay_to, from_uocks) {
 	var submit = true;
 	var buf = prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo, sort_flag, from_uocks);
 
-	console.log('>>> 发送数据:', buf, buf.length, bufferhelp.bufToStr(buf))
-	// submit_txn_(buf, submit)s
+	console.log('>>> 发送数据1:', buf, buf.length, bufferhelp.bufToStr(buf))
+	// submit_txn_(buf, submit)
 
 	var URL = WEB_SERVER_ADDR + '/txn/sheets/sheet';
 	dhttp({
@@ -602,7 +573,7 @@ function prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo, s
 	var pay_from = [];
 	var pay_from1 = new PayFrom();
 	pay_from1.value = 0;
-	pay_from1.address = pseudoWallet.pub_addr2;
+	pay_from1.address = pseudoWallet.pub_addr;
 	pay_from.push(pay_from1);
 
 	var pay_to = [];
@@ -612,7 +583,7 @@ function prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo, s
 	pay_to.push(pay_to1);
 
 	makesheet = new MakeSheet();
-	makesheet.vcn = 0;
+	makesheet.vcn = pseudoWallet._vcn;
 	makesheet.sequence = sequence;
 	makesheet.pay_from = pay_from;
 	makesheet.pay_to = pay_to;
@@ -622,6 +593,7 @@ function prepare_txn1_(pay_to, ext_in, submit, scan_count, min_utxo, max_utxo, s
 	makesheet.sort_flag = sort_flag;
 	// makesheet.from_uocks=from_uocks;
 	makesheet.last_uocks = [0];
+	console.log('>>> 发送msg1:',makesheet);
 	return submit_txn_(makesheet, submit);
 }
 
@@ -663,7 +635,6 @@ function make_payload(subscript, txns_ver, txns_in, txns_out, lock_time, input_i
 
 			tx_in.sig_script = script;
 			tx_ins.push(tx_in);
-
 		}
 		tx_outs = txns_out;
 	}
@@ -685,7 +656,8 @@ function make_payload(subscript, txns_ver, txns_in, txns_out, lock_time, input_i
 	// var payload = msg.binary(tx_copy, new Buffer(0));
 
 	var payload = transbinary.compayloadTran(tx_copy);
-	// console.log('>>> tx_copy payload:', bh.bufToStr(payload), bh.bufToStr(payload).length);
+
+	console.log('>>> tx_copy payload:', bh.bufToStr(payload), bh.bufToStr(payload).length);
 	//hash_type to I
 	var hash_type_buf = bufferhelp.numToBuf(hash_type, false, 4);
 	// var s=bufferhelp.bufToStr(hash_type_buf);
@@ -714,72 +686,72 @@ function CHR(n) {
 
 
 //test
-var _timer = setInterval(() => {
-	var _total = [{ 'name': 'xyc', 'age': 18 }, { 'name': 'zjm', 'age': 20 }];
-	// var _len = _total.length;
-	// var tx_ins2 = [];
-	// tx_ins_len=orgsheetMsg.tx_in.length;
-	if (application) {
+// var _timer = setInterval(() => {
+// 	var _total = [{ 'name': 'xyc', 'age': 18 }, { 'name': 'zjm', 'age': 20 }];
+// 	// var _len = _total.length;
+// 	// var tx_ins2 = [];
+// 	// tx_ins_len=orgsheetMsg.tx_in.length;
+// 	if (application) {
 
-		function a(tx, cb) {
-			// console.log('执行a函数 _tx:', _tx);
-			return transmit(cmd_pubAddr).then(res => {
-				tx.sig = res.data;
-				var v = cb && cb(tx);
-				return v;
-			});
-		}
+// 		function a(tx, cb) {
+// 			// console.log('执行a函数 _tx:', _tx);
+// 			return transmit(cmd_pubAddr).then(res => {
+// 				tx.sig = res.data;
+// 				var v = cb && cb(tx);
+// 				return v;
+// 			});
+// 		}
 
-		function b(tx) {
-			console.log('执行b函数 _tx:', tx);
-			tx_ins2.push(tx);
-			// return tx_ins2;
-		}
+// 		function b(tx) {
+// 			console.log('执行b函数 _tx:', tx);
+// 			tx_ins2.push(tx);
+// 			// return tx_ins2;
+// 		}
 
-		function m(i) {
-			return a(_total[i], b).then(r => {
-				return r;
-			});
-		}
+// 		function m(i) {
+// 			return a(_total[i], b).then(r => {
+// 				return r;
+// 			});
+// 		}
 
-		function c(len, cb) {
-			if (len >= 0 && len < _total.length && cb) {
-				return cb(len).then(ret => {
-					// console.log('>>> 执行c里的回调函数最终结果:', ret);
-					c(len + 1, cb);
-					return ret;
-				});
-			} else {
-				console.log('循环异步完成结果:', tx_ins2, tx_ins2.length);
-				main1();
-				main2();
-				main3();
-				main4();
+// 		function c(len, cb) {
+// 			if (len >= 0 && len < _total.length && cb) {
+// 				return cb(len).then(ret => {
+// 					// console.log('>>> 执行c里的回调函数最终结果:', ret);
+// 					c(len + 1, cb);
+// 					return ret;
+// 				});
+// 			} else {
+// 				console.log('循环异步完成结果:', tx_ins2, tx_ins2.length);
+// 				main1();
+// 				main2();
+// 				main3();
+// 				main4();
 
-				for (var i = 0; i < 3; i++) {
-					console.log('循环 i:', i);
-				}
-			}
-		}
+// 				for (var i = 0; i < 3; i++) {
+// 					console.log('循环 i:', i);
+// 				}
+// 			}
+// 		}
 
-		function main1() {
-			console.log('main1...');
-		}
+// 		function main1() {
+// 			console.log('main1...');
+// 		}
 
-		function main2() {
-			console.log('main2...');
-		}
+// 		function main2() {
+// 			console.log('main2...');
+// 		}
 
-		function main3() {
-			console.log('main3...');
-		}
+// 		function main3() {
+// 			console.log('main3...');
+// 		}
 
-		function main4() {
-			console.log('main4...');
-		}
+// 		function main4() {
+// 			console.log('main4...');
+// 		}
 
-		// c(0, m);
+// 		// c(0, m);
 
-		clearInterval(_timer);
-	}
-}, 2000);
+// 		clearInterval(_timer);
+// 	}
+// }, 2000);

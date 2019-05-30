@@ -64,6 +64,7 @@ var bindMsg = message.bindMsg;
 
 // 测试info
 // var URL = 'http://raw0.nb-chain.net/txn/state/account?addr=1118Mi5XxqmqTBp7TnPQd1Hk9XYagJQpDcZu6EiGE1VbXHAw9iZGPV&uock=0&uock2=0';
+// var URL = 'http://raw0.nb-chain.net/txn/state/account?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&uock=0&uock2=0';
 // dhttp({
 //     method: 'GET',
 //     url: URL,
@@ -97,19 +98,19 @@ var bindMsg = message.bindMsg;
 //     // event.sender.send('replyinfo', msg1);
 // })
 
-// function getTotal(msg) {
-//     var total = 0;
-//     var found = msg['found'];
-//     for (var i = 0; i < found.length; i++) {
-//         total += found[i]['value'];
-//     }
-//     return total;
-// }
+function getTotal(msg) {
+    var total = 0;
+    var found = msg['found'];
+    for (var i = 0; i < found.length; i++) {
+        total += found[i]['value'];
+    }
+    return total;
+}
 
 //测试utxo
-var URL = 'http://raw0.nb-chain.net/txn/state/account?addr=1118Mi5XxqmqTBp7TnPQd1Hk9XYagJQpDcZu6EiGE1VbXHAw9iZGPV&uock=0&uock2=0';
-var URL = 'http://raw0.nb-chain.net/txn/state/uock?addr=1118Mi5XxqmqTBp7TnPQd1Hk9XYagJQpDcZu6EiGE1VbXHAw9iZGPV&num=5&uock2=[]'
-var URL = 'http://raw0.nb-chain.net/txn/state/uock?addr=1118Mi5XxqmqTBp7TnPQd1Hk9XYagJQpDcZu6EiGE1VbXHAw9iZGPV&num=5&uock2=[]'
+// http://user1-node.nb-chain.net/txn/state/uock
+var URL = 'http://user1-node.nb-chain.net/txn/state/uock?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&num=5&uock=[]';
+var URL = 'http://user1-node.nb-chain.net/txn/state/uock?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&num=5&uock=[]';
 dhttp({
     method: 'GET',
     url: URL,
@@ -118,11 +119,10 @@ dhttp({
     var buf = res.body;
     console.log('> res:', buf, buf.length);
     var payload = message.g_parse(buf);
-    console.log('> res:', payload, payload.length);
-    var msg = message.parseUtxo(payload)[1];
-    msg = utxoScript(msg);
-
-    console.log('> msg:', msg);
+    // console.log('> res:', payload, payload.length);
+    // var msg = message.parseUtxo(payload)[1];``
+    // msg = utxoScript(msg);
+    // console.log('> msg:', msg);
 })
 
 function utxoScript(msg) {

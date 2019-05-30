@@ -92,8 +92,10 @@ function global_binary_func(msg, buf, prot, arrayLen) {
                     //str - content
                     var rets = global_binary_func(msg, buf, 'S')
                     return Buffer.concat([retv, rets]);
-                } else { //arr
-
+                } else if (b[0] == 'B') { //arr
+                    var retv = global_binary_func(parseInt(b[1].split(']')[0]), buf, 'V');
+                    var rets=bufferhelp.hexStrToBuffer(msg);
+                    return Buffer.concat([buf,retv, rets]);
                 }
             }
         } else {
@@ -146,7 +148,6 @@ function global_binary_func(msg, buf, prot, arrayLen) {
                 } else {
                     buf = global_binary_func.apply(subObj, [v, buf, fmt2, v.length]);
                 }
-
             } else {
                 // v = msg[attrName];
                 if (typeof (v) == 'string') {
@@ -158,8 +159,8 @@ function global_binary_func(msg, buf, prot, arrayLen) {
                 }
             }
         }
+        return buf;
     }
-    return buf;
 }
 
 function global_parse_func(buf, offset, prot, arrayLen) {//return [offset,value]
@@ -256,6 +257,9 @@ function standard(buf, fmt, offset, arrayLen) {//standard format
     if (fmt == 'V') {
         return [offset + 1, bufToNumer(buf.slice(offset, offset + 1))];
     }
+    if (fmt == 'H') {
+        return [offset + 2, bufToNumer(buf.slice(offset, offset + 2))];
+    }
     if (fmt == 'I') {
         return [offset + 4, bufToNumer(buf.slice(offset, offset + 4).reverse())];
     }
@@ -278,7 +282,6 @@ function standard(buf, fmt, offset, arrayLen) {//standard format
         var value = parseInt(arrayLen.split('_')[1]);
         if (value < 0xFD) //todo expand more
             return [offset, value];
-
     }
 }
 
@@ -376,7 +379,7 @@ function g_parse(data) {
     return payload;
 }
 
-function getCommand(data){
+function getCommand(data) {
     var buf_command = data.slice(4, 16);
     var stripCommand = strip(buf_command);
     var commandType = stripCommand.toString('latin1');
@@ -416,5 +419,5 @@ function parseUtxo(payload) {
 }
 
 module.exports = {
-    bindMsg, g_parse, parseInfo, parseUtxo, parseBlock, g_binary,getCommand
+    bindMsg, g_parse, parseInfo, parseUtxo, parseBlock, g_binary, getCommand
 }

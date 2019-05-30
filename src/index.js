@@ -15,7 +15,7 @@ process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = true
 const createWindow = () => {
   mainWindow = new BrowserWindow({
     width: 1000,
-    height: 600,
+    height: 650,
     webPreferences: {
       nodeIntegration: true,
     }

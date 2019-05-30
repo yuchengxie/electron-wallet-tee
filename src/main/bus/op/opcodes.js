@@ -432,7 +432,7 @@ function get_opcode_name(opcode) {
     if (opcode < 0 || opcode > 255) {
         throw 'opcode must be 1 byte'
     }
-    name = OPCODE_NAMES[opcode]
+    var name = OPCODE_NAMES[opcode]
     if (name == null) return OPCODE_NAMES[0xff];
     return name
 }

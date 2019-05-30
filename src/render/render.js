@@ -1,10 +1,20 @@
 const ipcRenderer = require('electron').ipcRenderer;
 
+var teeAddr = '';
+
+ipcRenderer.send('teeAddr');
+
+ipcRenderer.on('replyteeAddr', (event, data) => {
+    teeAddr = data;
+})
+
 window.onload = function () {
     var oldpass = getElement('frame_wallet_setpass', 'oldpass');
     var newpass = getElement('frame_wallet_setpass', 'newpass');
     var confirmpass = getElement('frame_wallet_setpass', 'confirmpass');
     var btn_wallet_setpass = getElement('frame_wallet_setpass', 'btn_wallet_setpass');
+
+
 
     btn_wallet_setpass.onclick = function () {
         var v_oldpass = oldpass.value;
@@ -82,6 +92,12 @@ window.onload = function () {
     ipcRenderer.on('replaygetpass', function (event, data) {
         alert(data);
     })
+    // ipcRenderer.on('transferpasserror', function (event, data) {
+    //     console.log('data:',data);
+    //     alert('1111');
+    // })
+
+
 
 
     //wallet_create
@@ -230,19 +246,37 @@ window.onload = function () {
         }
     })
 
-    //交易
+    //transfer
     var addrfrom = getElement('frame_transfer', 'addrfrom');
+    addrfrom.value = teeAddr;
     var addrto = getElement('frame_transfer', 'addrto');
     var t_value = getElement('frame_transfer', 't_value');
     var btn_txns = getElement('frame_transfer', 'btn_txns');
+    var transferState = getElement('frame_transfer', 'transferState');
+    var transferpin = getElement('frame_transfer', 'transferpin');
     // var btn_utxo = getElement('frame_utxo', 'btn_utxo');
     btn_txns.onclick = function () {
-        var from = addrfrom.value;
+        if (!teeAddr) {
+            alert('send addr error');
+            return;
+        };
+        var v_transferpin = transferpin.value.trim();
+        console.log('v_transferpin:', v_transferpin);
+        if (!v_transferpin || v_transferpin.length > 10 || v_transferpin.length < 3) {
+            alert('password err');
+            return;
+        }
+        // var from = addrfrom.value;
         var to = addrto.value;
         var value = t_value.value;
         console.log('btn_txns');
-        ipcRenderer.send('transfer', [from, to, value]);
+        ipcRenderer.send('transfer', [teeAddr, to, value, v_transferpin]);
     }
+
+    ipcRenderer.on('transresult', (event, data) => {
+        console.log('transresult:', data);
+        transferState.innerText = data;
+    })
 
 }
 
