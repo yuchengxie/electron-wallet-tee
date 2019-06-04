@@ -12,10 +12,10 @@ function Tokenizer(pk_script, expand_verify = false) {
     _expand_verify = expand_verify;
     this._script = '';
     this._tokens = [];
-    this._process = _process;
+    // this._process = _process;
     this.get_script_address = get_script_address;
     this.match_template = match_template;
-    this._process(pk_script);
+    // this._process(pk_script);
 }
 
 function _process(str_script) {
@@ -87,8 +87,8 @@ function _process(str_script) {
             s += output[i];
         }
     }
-    // return s;
-    this._script = s;
+    return s;
+    // this._script = s;
 }
 
 var _Verify = {
@@ -166,5 +166,5 @@ function _is_coin_hash(opcode, bytes_, data) {
 }
 
 module.exports = {
-    Tokenizer
+    Tokenizer,_process
 }

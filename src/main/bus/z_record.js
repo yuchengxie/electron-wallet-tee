@@ -1,4 +1,4 @@
-const { ipcMain } = require('electron')
+// const { ipcMain } = require('electron')
 const dhttp = require('dhttp');
 const smartcard = require('smartcard');
 const hexify = require('hexify');
@@ -8,19 +8,19 @@ const CTime = require('china-time');
 const sha256 = require('js-sha256');
 const bitcoinjs = require('bitcoinjs-lib');
 
-const message = require('./bus/message')
-const gFormat = require('./bus/format');
-const bh = require('./bus/bufferhelp');
-const opscript = require('./bus/op/script');
-var transfer = require('./bus/transfer')
-const PoetClient = require('./bus/mine_client').PoetClient;
-const utilkey = require('./bus/utilkey');
-const struct = require('./bus/struct');
+const message = require('./message')
+const gFormat = require('./format');
+const bh = require('./bufferhelp');
+const opscript = require('./op/script');
+var transfer = require('./transfer')
+const PoetClient = require('./mine_client').PoetClient;
+const utilkey = require('./utilkey');
+const struct = require('./struct');
 const Devices = smartcard.Devices;
 const Iso7816Application = smartcard.Iso7816Application;
 
-const makesheetbinary = require('./bus/makesheet');
-const transbinary = require('./bus/transaction');
+const makesheetbinary = require('./makesheet');
+const transbinary = require('./transaction');
 const chinaTime = require('china-time');
 
 const devices = new Devices();
@@ -35,305 +35,270 @@ var cmd_pubkey = '8022000000';
 var cmd_pubkeyHash = '8022010000';
 var GET_RESPONSE = '0x00c00000';
 
-var TransType = {};
-TransType._record = 0;
-TransType._transfer = 1;
-
 var __time__ = () => { return `${CTime("YYYY-MM-DD HH:mm:ss")}` };
 var pseudoWallet;
 
 var WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
 // var WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
-ipcMain.on('teeAddr', function (event, data) {
-    event.sender.send('replyteeAddr', pseudoWallet.pub_addr);
-});
+// ipcMain.on('teeAddr', function (event, data) {
+//     event.sender.send('replyteeAddr', pseudoWallet.pub_addr);
+// });
 
-ipcMain.on('getpass', function (event, data) {
-    console.log('>>> getpass:', data);
+// ipcMain.on('getpass', function (event, data) {
+//     console.log('>>> getpass:', data);
 
-    if (data) {
-        try {
-            var scmd = '00200000' + '0' + parseInt(data.length / 2) + data;
-            transmit(scmd).then(res => {
-                var result = '';
-                if (res.data == '9000') {
-                    result = 'verify password successful.';
-                    // pseudoWallet.pin_code = data[1];
-                } else {
-                    if (res.data.slice(0, 3) == '63c') {
-                        result = 'incorrect password, left try count: ' + res.data.slice(3);
-                    } else {
-                        result = 'verify password failed.';
-                    }
-                }
-                event.sender.send('replaygetpass', result);
-            })
-        } catch (error) {
+//     if (data) {
+//         try {
+//             var scmd = '00200000' + '0' + parseInt(data.length / 2) + data;
+//             transmit(scmd).then(res => {
+//                 var result = '';
+//                 if (res.data == '9000') {
+//                     result = 'verify password successful.';
+//                     // pseudoWallet.pin_code = data[1];
+//                 } else {
+//                     if (res.data.slice(0, 3) == '63c') {
+//                         result = 'incorrect password, left try count: ' + res.data.slice(3);
+//                     } else {
+//                         result = 'verify password failed.';
+//                     }
+//                 }
+//                 event.sender.send('replaygetpass', result);
+//             })
+//         } catch (error) {
 
-        }
-    }
-})
+//         }
+//     }
+// })
 
-ipcMain.on('setpass', function (event, data) {
-    var psw = data[0];
-    var newPin = data[1];
-    var incmd = psw + 'ff' + newPin;
-    incmd = '002e0000' + '0' + parseInt(incmd.length / 2) + incmd;
-    transmit(incmd).then(res => {
-        var result = '';
-        if (res.data == '9000') {
-            result = 'change password successful.';
+// ipcMain.on('setpass', function (event, data) {
+//     var psw = data[0];
+//     var newPin = data[1];
+//     var incmd = psw + 'ff' + newPin;
+//     incmd = '002e0000' + '0' + parseInt(incmd.length / 2) + incmd;
+//     transmit(incmd).then(res => {
+//         var result = '';
+//         if (res.data == '9000') {
+//             result = 'change password successful.';
 
-        } else {
-            if (res.data.slice(0, 3) == '63c') {
-                result = 'incorrect password, left try count: ' + res.data.slice(3);
-            } else {
-                result = 'change password failed.';
-            }
-        }
-        event.sender.send('replysetpass', result);
-    })
-})
+//         } else {
+//             if (res.data.slice(0, 3) == '63c') {
+//                 result = 'incorrect password, left try count: ' + res.data.slice(3);
+//             } else {
+//                 result = 'change password failed.';
+//             }
+//         }
+//         event.sender.send('replysetpass', result);
+//     })
+// })
 
 
 
-ipcMain.on('save', function (event, data) {
-    // console.log(data);
-    // if (data.length == 3) {
-    //     wallet = new Wallet(data[1], data[2]);
-    //     console.log('>>> save data :', data[1], data[2]);
-    //     console.log('>>> save after wallet:', wallet);
+// ipcMain.on('save', function (event, data) {
+//     // console.log(data);
+//     // if (data.length == 3) {
+//     //     wallet = new Wallet(data[1], data[2]);
+//     //     console.log('>>> save data :', data[1], data[2]);
+//     //     console.log('>>> save after wallet:', wallet);
 
-    //     var addr = wallet.save(data[0]);
-    //     console.log(addr);
-    //     if (addr) {
-    //         event.sender.send('replysave', [addr, data[2]]);
-    //     }
-    // } else {
-    //     throw Error('import wallet data error');
-    // }
-})
+//     //     var addr = wallet.save(data[0]);
+//     //     console.log(addr);
+//     //     if (addr) {
+//     //         event.sender.send('replysave', [addr, data[2]]);
+//     //     }
+//     // } else {
+//     //     throw Error('import wallet data error');
+//     // }
+// })
 
-ipcMain.on('create', function (event, data) {
-    // console.log(data);
-    // if (data.length == 3) {
-    //     wallet.password = data[1];
-    //     wallet.filename = data[2];
-    //     var addr = wallet.create(data[0]);
-    //     if (addr) {
-    //         event.sender.send('replycreate', [data[2], addr]);
-    //     }
-    // } else {
-    //     throw Error('create wallet data error');
-    // }
-})
+// ipcMain.on('create', function (event, data) {
+//     // console.log(data);
+//     // if (data.length == 3) {
+//     //     wallet.password = data[1];
+//     //     wallet.filename = data[2];
+//     //     var addr = wallet.create(data[0]);
+//     //     if (addr) {
+//     //         event.sender.send('replycreate', [data[2], addr]);
+//     //     }
+//     // } else {
+//     //     throw Error('create wallet data error');
+//     // }
+// })
 
-ipcMain.on('block', function (event, data) {
-    // block_hash should be str or None
-    var block_hash = data[0];
-    var block_height = data[1];
-    var height = '';
-    if (block_height.length == 0) {
-        //default heights
-        var a = [-1, -2, -3];
-        for (var i = 0; i < a.length; i++) {
-            height += '&hi=' + a[i];
-        }
-    } else {
-        height = '&hi=' + block_height;
-    }
-    var _hash = '';
-    if (block_hash.length == 0) {
-        for (let i = 0; i < 32; i++) {
-            _hash += '00';
-        }
-    } else {
-        _hash = block_hash;
-        height = '';
-    }
-    var url = WEB_SERVER_ADDR + '/txn/state/block?&hash=' + _hash + height;
-    console.log('url:', url);
-    dhttp({
-        url: url,
-        method: 'GET'
-    }, function (err, res) {
-        if (err) throw 'getblock err';
-        var buf = res.body;
-        var payload = message.g_parse(buf);
-        var msg = message.parseBlock(payload)[1];
-        console.log('> msg:', msg);
+// ipcMain.on('block', function (event, data) {
+//     // block_hash should be str or None
+//     var block_hash = data[0];
+//     var block_height = data[1];
+//     var height = '';
+//     if (block_height.length == 0) {
+//         //default heights
+//         var a = [-1, -2, -3];
+//         for (var i = 0; i < a.length; i++) {
+//             height += '&hi=' + a[i];
+//         }
+//     } else {
+//         height = '&hi=' + block_height;
+//     }
+//     var _hash = '';
+//     if (block_hash.length == 0) {
+//         for (let i = 0; i < 32; i++) {
+//             _hash += '00';
+//         }
+//     } else {
+//         _hash = block_hash;
+//         height = '';
+//     }
+//     var url = WEB_SERVER_ADDR + '/txn/state/block?&hash=' + _hash + height;
+//     console.log('url:', url);
+//     dhttp({
+//         url: url,
+//         method: 'GET'
+//     }, function (err, res) {
+//         if (err) throw 'getblock err';
+//         var buf = res.body;
+//         var payload = message.g_parse(buf);
+//         var msg = message.parseBlock(payload)[1];
+//         console.log('> msg:', msg);
 
-        var headers = msg['headers'];
-        var blocks = [];
-        for (var idx in headers) {
-            var _block = {};
-            _block.height = msg['heights'][idx];
-            _block.txck = msg['txcks'][idx];
-            _block.version = headers[idx]['version'];
-            _block.link_no = headers[idx]['link_no'];
-            _block.prev_block = headers[idx]['prev_block'];
-            _block.merkle_root = headers[idx]['merkle_root'];
-            _block.timestamp = headers[idx]['timestamp'];
-            _block.bits = headers[idx]['bits'];
-            _block.nonce = headers[idx]['nonce'];
-            _block.miner = headers[idx]['miner'];
-            _block.txn_count = headers[idx]['txn_count'];
-            _block.hash = getHash(_block);
-            blocks.push(_block);
-        }
-        event.sender.send('replyblock', blocks);
-    })
-})
+//         var headers = msg['headers'];
+//         var blocks = [];
+//         for (var idx in headers) {
+//             var _block = {};
+//             _block.height = msg['heights'][idx];
+//             _block.txck = msg['txcks'][idx];
+//             _block.version = headers[idx]['version'];
+//             _block.link_no = headers[idx]['link_no'];
+//             _block.prev_block = headers[idx]['prev_block'];
+//             _block.merkle_root = headers[idx]['merkle_root'];
+//             _block.timestamp = headers[idx]['timestamp'];
+//             _block.bits = headers[idx]['bits'];
+//             _block.nonce = headers[idx]['nonce'];
+//             _block.miner = headers[idx]['miner'];
+//             _block.txn_count = headers[idx]['txn_count'];
+//             _block.hash = getHash(_block);
+//             blocks.push(_block);
+//         }
+//         event.sender.send('replyblock', blocks);
+//     })
+// })
 
-ipcMain.on('info', function (event, data) {
-    let pv = false;
-    let pb = false;
-    let after = 0;
-    let before = 0;
-    let address = '';
-    var addr = data;
-    if (addr.length == 0) {
-        if (!pseudoWallet) return;
-        addr = pseudoWallet.pub_addr;
-        console.log('>>> ready read wallet address:', addr);
-        if (!addr) {
-            return;
-        }
-    }
-    // var url = 'http://raw0.nb-chain.net/txn/state/account?addr=' + addr + '&uock=' + before + '&uock2=' + after;
-    // var url = WEB_SERVER_ADDR + '/txn/state/account?addr=' + addr + '&uock=' + before + '&uock2=' + after;
-    var url = WEB_SERVER_ADDR + '/txn/state/account?addr=' + addr;
-    console.log('info url:', url);
-    dhttp(
-        {
-            url: url,
-            method: 'GET'
-        }, function (err, res) {
-            if (err) throw 'getinfo err';
-            var buf = res.body;
-            var payload = message.g_parse(buf);
-            var msg = message.parseInfo(payload)[1];
-            var msg1 = {};
-            msg1.account = bh.hexToBuffer(msg['account']).toString('latin1');
-            msg1.timestamp = msg['timestamp'];
-            msg1.link_no = msg['link_no'];
-            var arrfound = [];
-            var total = 0;
-            for (var i = 0; i < msg['found'].length; i++) {
-                var found_item = {};
-                var m = msg['found'][i];
-                var height = m['height'];
-                var value = m['value'];
-                var uock = m['uock'];
-                //handle uock
-                found_item.uock = bh.bufToStr(uock);
-                found_item.height = height;
-                found_item.value = value;
-                arrfound.push(found_item);
-                total += value;
-            }
-            msg1.found = arrfound;
-            msg1.total = total;
-            console.log('> info msg:', msg1);
-            event.sender.send('replyinfo', msg1);
-        }
-    )
-})
+// ipcMain.on('info', function (event, data) {
+//     let pv = false;
+//     let pb = false;
+//     let after = 0;
+//     let before = 0;
+//     let address = '';
+//     var addr = data;
+//     if (addr.length == 0) {
+//         if (!pseudoWallet) return;
+//         addr = pseudoWallet.pub_addr;
+//         console.log('>>> ready read wallet address:', addr);
+//         if (!addr) {
+//             return;
+//         }
+//     }
+//     // var url = 'http://raw0.nb-chain.net/txn/state/account?addr=' + addr + '&uock=' + before + '&uock2=' + after;
+//     // var url = WEB_SERVER_ADDR + '/txn/state/account?addr=' + addr + '&uock=' + before + '&uock2=' + after;
+//     var url = WEB_SERVER_ADDR + '/txn/state/account?addr=' + addr;
+//     console.log('info url:', url);
+//     dhttp(
+//         {
+//             url: url,
+//             method: 'GET'
+//         }, function (err, res) {
+//             if (err) throw 'getinfo err';
+//             var buf = res.body;
+//             var payload = message.g_parse(buf);
+//             var msg = message.parseInfo(payload)[1];
+//             var msg1 = {};
+//             msg1.account = bh.hexToBuffer(msg['account']).toString('latin1');
+//             msg1.timestamp = msg['timestamp'];
+//             msg1.link_no = msg['link_no'];
+//             var arrfound = [];
+//             var total = 0;
+//             for (var i = 0; i < msg['found'].length; i++) {
+//                 var found_item = {};
+//                 var m = msg['found'][i];
+//                 var height = m['height'];
+//                 var value = m['value'];
+//                 var uock = m['uock'];
+//                 //handle uock
+//                 found_item.uock = bh.bufToStr(uock);
+//                 found_item.height = height;
+//                 found_item.value = value;
+//                 arrfound.push(found_item);
+//                 total += value;
+//             }
+//             msg1.found = arrfound;
+//             msg1.total = total;
+//             console.log('> info msg:', msg1);
+//             event.sender.send('replyinfo', msg1);
+//         }
+//     )
+// })
 
-ipcMain.on('utxo', function (event, data) {
-    // var url = 'http://raw0.nb-chain.net/txn/state/uock?addr=1118hfRMRrJMgSCoV9ztyPcjcgcMZ1zThvqRDLUw3xCYkZwwTAbJ5o&num=2&uock2=[]';
-    // var addr = wallet.getAddrFromWallet();
-    // var d = wallet.getWalletData();
-    if (!pseudoWallet) return;
-    var addr = pseudoWallet.pub_addr;
-    console.log('>>> ready read wallet address:', addr);
-    if (!addr) {
-        return;
-    }
-    // var url = WEB_SERVER_ADDR+'/txn/state/uock?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&num=5';
-    var url = WEB_SERVER_ADDR + '/txn/state/uock?addr=' + addr + '&num=5';
-    console.log('utxo url:', url);
-    dhttp(
-        {
-            url: url,
-            method: 'GET'
-        }, function (err, res) {
-            if (err) throw 'getutxo err';
-            console.log('> utxo res:', res.body, res.body.length);
-            var buf = res.body;
-            var payload = message.g_parse(buf);
-            console.log('> res:', payload, payload.length);
-            var msg = message.parseUtxo(payload)[1];
-            msg = utxoScript(msg);
-            console.log('> msg:', msg);
-            event.sender.send('replyutxo', msg);
-        }
-    )
-})
+// ipcMain.on('utxo', function (event, data) {
+//     // var url = 'http://raw0.nb-chain.net/txn/state/uock?addr=1118hfRMRrJMgSCoV9ztyPcjcgcMZ1zThvqRDLUw3xCYkZwwTAbJ5o&num=2&uock2=[]';
+//     // var addr = wallet.getAddrFromWallet();
+//     // var d = wallet.getWalletData();
+//     if (!pseudoWallet) return;
+//     var addr = pseudoWallet.pub_addr;
+//     console.log('>>> ready read wallet address:', addr);
+//     if (!addr) {
+//         return;
+//     }
+//     // var url = WEB_SERVER_ADDR+'/txn/state/uock?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&num=5';
+//     var url = WEB_SERVER_ADDR + '/txn/state/uock?addr=' + addr + '&num=5';
+//     console.log('utxo url:', url);
+//     dhttp(
+//         {
+//             url: url,
+//             method: 'GET'
+//         }, function (err, res) {
+//             if (err) throw 'getutxo err';
+//             console.log('> utxo res:', res.body, res.body.length);
+//             var buf = res.body;
+//             var payload = message.g_parse(buf);
+//             console.log('> res:', payload, payload.length);
+//             var msg = message.parseUtxo(payload)[1];
+//             msg = utxoScript(msg);
+//             console.log('> msg:', msg);
+//             event.sender.send('replyutxo', msg);
+//         }
+//     )
+// })
 
-var tran_event;
-ipcMain.on('transfer', function (event, res) {
-    tran_event = event;
-    console.log(data);
-    //verify password 
-    var data = res[3];
-    if (data) {
-        try {
-            var scmd = '00200000' + '0' + parseInt(data.length / 2) + data;
-            transmit(scmd).then(res => {
-                var result = '';
-                if (res.data == '9000') {
-                    result = 'verify password successful.';
-                    // pseudoWallet.pin_code = data[1];
-                    query_sheet('', '');
-                } else {
-                    if (res.data.slice(0, 3) == '63c') {
-                        result = 'incorrect password, left try count: ' + res.data.slice(3);
-                    } else {
-                        result = 'verify password failed.';
-                    }
-                    event.sender.send('replaygetpass', result);
-                }
+// var tran_event;
+// ipcMain.on('transfer', function (event, res) {
+//     tran_event = event;
+//     console.log(data);
+//     //verify password 
+//     var data = res[3];
+//     if (data) {
+//         try {
+//             var scmd = '00200000' + '0' + parseInt(data.length / 2) + data;
+//             transmit(scmd).then(res => {
+//                 var result = '';
+//                 if (res.data == '9000') {
+//                     result = 'verify password successful.';
+//                     // pseudoWallet.pin_code = data[1];
+//                     query_sheet('', '');
+//                 } else {
+//                     if (res.data.slice(0, 3) == '63c') {
+//                         result = 'incorrect password, left try count: ' + res.data.slice(3);
+//                     } else {
+//                         result = 'verify password failed.';
+//                     }
+//                     event.sender.send('replaygetpass', result);
+//                 }
 
-            })
-        } catch (error) {
+//             })
+//         } catch (error) {
 
-        }
-    }
-    // query_sheet('', '');
-    // transfer.query_sheet('', '');
-})
-
-var record_event;
-ipcMain.on('record', function (event, res) {
-    console.log(data);
-    record_event = event;
-    //verify password 
-    var data = res[1];
-    var content = res[0];
-    if (data) {
-        try {
-            var scmd = '00200000' + '0' + parseInt(data.length / 2) + data;
-            transmit(scmd).then(res => {
-                var result = '';
-                if (res.data == '9000') {
-                    result = 'verify password successful.';
-                    record(content);
-                } else {
-                    if (res.data.slice(0, 3) == '63c') {
-                        result = 'incorrect password, left try count: ' + res.data.slice(3);
-                    } else {
-                        result = 'verify password failed.';
-                    }
-                    event.sender.send('replaygetpass', result);
-                }
-
-            })
-        } catch (error) {
-
-        }
-    }
-})
+//         }
+//     }
+//     // query_sheet('', '');
+//     // transfer.query_sheet('', '');
+// })
 
 function getHash(_block) {
     console.log('_block:', _block);
@@ -396,6 +361,7 @@ devices.on('device-activated', event => {
                         pubAddr = bh.hexStrToBuffer(pubAddr).toString('latin1');
                         pseudoWallet = new PseudoWallet(pubkey, pubHash, pubAddr);
                         console.log('>>> pseudoWallet:', pseudoWallet);
+                        record('hello');
                         // var tee = new TeeMiner(pubHash);
                         // var gPoetClient = new PoetClient([tee], 0, '', 'clinet1');
                         // dns.lookup(mine_hostname, (err, ip_addr, family) => {
@@ -632,7 +598,7 @@ function PayTo() {
     this.address = '';
 }
 
-function getWaitSubmit(res, _type) {
+function getWaitSubmit(res) {
     var resbuf = res.body;
     var s = bh.bufToStr(resbuf);
     console.log('>>> 接收数据1:', resbuf, s, s.length);
@@ -648,7 +614,8 @@ function getWaitSubmit(res, _type) {
     var payto = makesheet.pay_to;
     for (var i = 0; i < payto.length; i++) {
         var p = payto[i];
-        if (p.value != 0 || p.address.slice(0, 1) != 0x6a) {
+        // if (p.value != 0 || p.address.slice(0, 1) != 0x6a) {
+        if (p.value != 0 || bh.bufToStr(p.address.slice(0, 1)) != '6a') {
             var ret = decode_check(p.address);
             ret = bh.bufToStr(ret);
             d[ret] = p.value;
@@ -680,12 +647,12 @@ function getWaitSubmit(res, _type) {
         }
     }
 
-    for (var k in d) {
+    for (k in d) {
         console.log(k, d[k]);
-        // if (coin_hash != addr.slice(2)) {
-        //     console.log('Error: unknown output address');
-        // }
-        // return 0;
+        if (coin_hash != addr.slice(2)) {
+            console.log('Error: unknown output address');
+        }
+        return 0;
     }
 
     // pks_out0 = orgsheetMsg.pks_out;
@@ -712,8 +679,7 @@ function getWaitSubmit(res, _type) {
         } else {
             console.log('tx_ins2:', tx_ins2, tx_ins2.length);
             _m1();
-            console.log('_type:',_type);
-            _m2(_type);
+            _m2();
         }
     }
 
@@ -754,7 +720,7 @@ function getWaitSubmit(res, _type) {
     }
 }
 
-function _m2(_type) {
+function _m2() {
     if (submit) {
         var unsign_num = orgsheetMsg.tx_in.length - pks_num
         if (unsign_num != 0) { // leaving to sign
@@ -784,7 +750,7 @@ function _m2(_type) {
                             method: 'GET',
                             url: url,
                         }, function (err, res) {
-                            loop_query_tran(res, _type);
+                            loop_query_tran(res);
                         })
                     }, 10000);
                 }
@@ -808,9 +774,10 @@ function _m1() {
 
     //txn payload magic
     txn_binary = message.g_binary(txn_payload, 'tx');
-    console.log('>>> txn_binary:', txn_binary, bh.bufToStr(txn_binary), bh.bufToStr(txn_binary).length);
+    // console.log('>>> txn_binary:', txn_binary, bh.bufToStr(txn_binary), bh.bufToStr(txn_binary).length);
     //payload  hashds excludes raw_script
     hash_ = bitcoinjs.crypto.sha256(bitcoinjs.crypto.sha256(txn_binary.slice(24, txn_binary.length - 1)));
+    console.log('>>> hash_:', hash_, hash_.length);
     // console.log('>>> hash_:', hash_, hash_.length, bh.bufToStr(hash_));
     state_info = [orgsheetMsg.sequence, txn, 'requested', hash_, orgsheetMsg.last_uocks];
     _wait_submit.push(state_info);
@@ -861,7 +828,7 @@ function getTxnHash(res) {
     }
 }
 
-function loop_query_tran(res, _type) {
+function loop_query_tran(res) {
     if (!res.hasOwnProperty('body') || !res.hasOwnProperty('statusCode'))
         return
     var state = '';
@@ -896,11 +863,9 @@ function loop_query_tran(res, _type) {
             console.log(state);
         }
     }
-    if (_type == TransType._transfer) {
-        tran_event.sender.send('recordresult', state);
-    } else if (_type == TransType._record) {
-        record_event.sender.send('transresult', state);
-    }
+    // tran_event.sender.send('transresult', state);
+    // console.log('>>> transresult:',state);
+    // }
 }
 
 function query_sheet(pay_to, from_uocks) {
@@ -927,7 +892,7 @@ function query_sheet(pay_to, from_uocks) {
             seq = 0;
             return;
         };
-        getWaitSubmit(res,TransType._transfer);
+        getWaitSubmit(res);
     })
 }
 
@@ -978,11 +943,11 @@ function submit_txn_(msg, submit) {
     //4-16
     var command = new Buffer(12);
     command.write('makesheet', 0);
-    console.log('> msg:', msg);
+    // console.log('> msg:', msg);
 
     var payload = makesheetbinary.compayload(msg);
 
-    console.log('makesheet to payload buf\n:', payload, bh.bufToStr(payload), payload.length);
+    console.log('makesheet buf\n:', payload, bh.bufToStr(payload), payload.length);
     //16-20 payload length
     var len_buf = new Buffer(4);
     var len = payload.length;
@@ -1098,7 +1063,7 @@ function query_sheet_ex(protocol_id, str_list, submit = true, scan_count = 0, mi
             seq = 0;
             return;
         };
-        getWaitSubmit(res, TransType._record);
+        getWaitSubmit(res);
     })
 }
 
@@ -1200,3 +1165,4 @@ function addn(str) {
     }
     return t;
 }
+

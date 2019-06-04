@@ -109,8 +109,8 @@ function getTotal(msg) {
 
 //测试utxo
 // http://user1-node.nb-chain.net/txn/state/uock
-var URL = 'http://user1-node.nb-chain.net/txn/state/uock?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&num=5&uock=[]';
-var URL = 'http://user1-node.nb-chain.net/txn/state/uock?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&num=5&uock=[]';
+var URL = 'http://user1-node.nb-chain.net/txn/state/uock?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&num=5';
+// var URL = 'http://user1-node.nb-chain.net/txn/state/uock?addr=1ABmVkYkHdCKs5FUtU7NUThP24u4YyVBkJuua47wmJ4sV9WDmzBy5f&num=5&uock=[]';
 dhttp({
     method: 'GET',
     url: URL,
@@ -119,10 +119,11 @@ dhttp({
     var buf = res.body;
     console.log('> res:', buf, buf.length);
     var payload = message.g_parse(buf);
-    // console.log('> res:', payload, payload.length);
-    // var msg = message.parseUtxo(payload)[1];``
-    // msg = utxoScript(msg);
-    // console.log('> msg:', msg);
+    
+    console.log('> res:', payload, payload.length);
+    var msg = message.parseUtxo(payload)[1];
+    msg = utxoScript(msg);
+    console.log('> msg:', msg);
 })
 
 function utxoScript(msg) {

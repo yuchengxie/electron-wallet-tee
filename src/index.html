@@ -61,8 +61,9 @@
 						<a class="nav-link" id='nav_transfer' onclick="tab(this)">交易</a>
 					</li>
 
-					<!-- <a class="nav-link" id='nav_cun' onclick="tab(this)">存证</a>
-					</li>  -->
+					<li>
+						<a class="nav-link" id='nav_record' onclick="tab(this)">存证</a>
+					</li>
 				</ul>
 				<form class="form-inline my-2 my-lg-0">
 					<input class="form-control mr-sm-2" type="search" placeholder="输入查询内容" aria-label="Search">
@@ -103,6 +104,10 @@
 				<iframe src="./render/transfer/transfer.html" width="100%" name='frametransfer' frameborder="0"
 					scrolling="auto" id='frame_transfer'></iframe>
 			</div>
+			<div id='record' class="page">
+				<iframe src="./render/record/record.html" width="100%" name='framerecord' frameborder="0"
+					scrolling="auto" id='frame_record'></iframe>
+			</div>
 			<!-- <div id='wallet_change' class="page">
 				<iframe src="./render/wallet/change/change.html" width="100%" name='frametransfer' frameborder="0"
 					scrolling="auto" id='frame_wallet_change'></iframe>
@@ -122,7 +127,7 @@
 
 </html>
 <script>
-	require('electron-connect').client.create();
+	// require('electron-connect').client.create();
 </script>
 <script src="./router.js"></script>
 <script src="./render/render.js"></script>

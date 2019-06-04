@@ -16,5 +16,8 @@ pw info address
 
 //utxo
  pw utxo 1118hfRMRrJMgSCoV9ztyPcjcgcMZ1zThvqRDLUw3xCYkZwwTAbJ5o -n 2 
+
+ 1.交易支持多笔转账
+ 
  
  

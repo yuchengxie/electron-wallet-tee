@@ -15,28 +15,26 @@
     <div class="container my-3">
         <div class="row justify-content-center">
             <div class="col-8 control-group">
-                <div class="row col-form-label">发送地址:</div>
-                <input class="row form-control" type="text"
-                    value="" id='addrfrom' disabled
-                    placeholder="请输入发送地址">
+                <div class="row col-form-label">TEE地址:</div>
+                <input class="row form-control" type="text" value="" id='addrfrom' disabled placeholder="TEE地址">
             </div>
             <div class="col-8 control-group">
-                <div class="row col-form-label">接收地址:</div>
+                <div class="row col-form-label">存证内容:</div>
                 <input class="row form-control" type="text"
-                    value="1118hfRMRrJMgSCoV9ztyPcjcgcMZ1zThvqRDLUw3xCYkZwwTAbJ5o" id='addrto' placeholder="请输入接收地址">
+                    value="" id='content' placeholder="请输入存证内容">
             </div>
-            <div class="col-8 control-group">
+            <!-- <div class="col-8 control-group">
                 <div class="row col-form-label">转账金额:</div>
                 <input class="row form-control" type="text" value="1" id='t_value' placeholder="请输入转账金额">
-            </div>
+            </div> -->
 
             <div class="col-8 control-group">
                 <div class="row col-form-label">交易密码:</div>
                 <input class="row form-control" type="password" value="" id='transferpin' placeholder="请输入密码">
             </div>
-            
+
             <div class="col-8 control-group">
-                <button class="btn btn-info row my-4 col word" id='btn_txns'>交易</button>
+                <button class="btn btn-info row my-4 col word" id='btn_record'>存证</button>
             </div>
             <!-- class="row progress-bar progress-bar-striped bg-success"  -->
             <!-- <div class="col-8 control-group">
@@ -47,7 +45,7 @@
             </div> -->
             <div class="col-8 control-group">
                 <div class="row col-8">
-                    <div id='transferState' style="font-size: 16px;color:blueviolet"></div>
+                    <div id='recordState' style="font-size: 16px;color:blueviolet"></div>
                 </div>
             </div>
         </div>

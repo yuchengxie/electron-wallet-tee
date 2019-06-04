@@ -9,9 +9,10 @@ const R = {
     Block: 'block',
     UTXO: 'utxo',
     Transfer:'transfer',
+    Record:'record',
 }
 
-const Index=R.Transfer;
+const Index=R.Record;
 
 var navhome = document.getElementById('nav_home');
 var navwallet = document.getElementById('nav_wallet_create');

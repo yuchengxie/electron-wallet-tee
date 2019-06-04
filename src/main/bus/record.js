@@ -16,8 +16,8 @@ var seq = 0;
 var pks_num = 0;
 var sequence = 0;
 var wallet;
-var WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
-// var WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
+// var WEB_SERVER_ADDR = 'http://raw0.nb-chain.net';
+var WEB_SERVER_ADDR = 'http://user1-node.nb-chain.net';
 
 var command_type = 'makesheet';
 var magic = Buffer.from([0xf9, 0x6e, 0x62, 0x74]);

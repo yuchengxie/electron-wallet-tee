@@ -14,8 +14,6 @@ window.onload = function () {
     var confirmpass = getElement('frame_wallet_setpass', 'confirmpass');
     var btn_wallet_setpass = getElement('frame_wallet_setpass', 'btn_wallet_setpass');
 
-
-
     btn_wallet_setpass.onclick = function () {
         var v_oldpass = oldpass.value;
         var v_newpass = newpass.value;
@@ -254,7 +252,7 @@ window.onload = function () {
     var btn_txns = getElement('frame_transfer', 'btn_txns');
     var transferState = getElement('frame_transfer', 'transferState');
     var transferpin = getElement('frame_transfer', 'transferpin');
-    // var btn_utxo = getElement('frame_utxo', 'btn_utxo');
+    
     btn_txns.onclick = function () {
         if (!teeAddr) {
             alert('send addr error');
@@ -269,13 +267,43 @@ window.onload = function () {
         // var from = addrfrom.value;
         var to = addrto.value;
         var value = t_value.value;
-        console.log('btn_txns');
+        transferpin.value = '';
         ipcRenderer.send('transfer', [teeAddr, to, value, v_transferpin]);
     }
 
     ipcRenderer.on('transresult', (event, data) => {
         console.log('transresult:', data);
         transferState.innerText = data;
+        console.log('>>> 收到transresult:',data);
+    })
+    
+    //record
+    var recordrfrom = getElement('frame_record', 'addrfrom');
+    recordrfrom.value = teeAddr;
+    var recordState = getElement('frame_record', 'recordState');
+    var recordcontent = getElement('frame_record', 'content')
+    var recordpin = getElement('frame_record', 'transferpin');
+    var btn_record = getElement('frame_record', 'btn_record');
+    
+    btn_record.onclick = function () {
+        if (!teeAddr) {
+            alert('send addr error');
+            return;
+        };
+        var v_recordpin = recordpin.value.trim();
+        console.log('v_recordpin:', v_recordpin);
+        if (!v_recordpin || v_recordpin.length > 10 || v_recordpin.length < 3) {
+            alert('password err');
+            return;
+        }
+        var v_content = recordcontent.value;
+        v_recordpin.value = '';
+        ipcRenderer.send('record', [v_content, v_recordpin]);
+    }
+
+    ipcRenderer.on('recordresult', (event, data) => {
+        console.log('recordresult:', data);
+        recordState.innerText = data;
     })
 
 }
