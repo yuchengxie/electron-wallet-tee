@@ -311,13 +311,20 @@ window.onload = function () {
     var btn_stop=getElement('frame_miner', 'btn_stop');
     var minerState=getElement('frame_miner', 'minerState');
     btn_start.onclick=function(){
-        alert('start miner');
         ipcRenderer.send('start');
     }
+
+    ipcRenderer.on('replyStartMiner', (event, data) => {
+        minerState.innerText = data;
+    })
+
     btn_stop.onclick=function(){
-        alert('stop miner');
         ipcRenderer.send('stop');
     }
+
+    ipcRenderer.on('replystoptMiner', (event, data) => {
+        minerState.innerText = data;
+    })
 
 }
 
