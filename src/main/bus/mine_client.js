@@ -243,7 +243,7 @@ PoetClient.prototype.handle_message = function (payload, that) {
             var b = bh.hexStrToBuffer(msg.reason);
             var reason = b.toString('latin1');
             // console.log('>>> sCmd:%s %s\n>>> msg:%o',sCmd,reason,msg);
-            // console.log('>>> sCmd:%s %s', sCmd, reason);
+            console.log('>>> sCmd:%s %s', sCmd, reason);
             //missed task old
             //invalid current task not exist
             if (reason == 'missed' && that._last_taskid == msg.sequence) {

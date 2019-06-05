@@ -370,7 +370,7 @@ function g_parse(data) {
     //check the checksum
     var checksum = toBuffer(sha256(toBuffer(sha256(payload)))).slice(0, 4);
     if (data.slice(20, 24).compare(checksum) != 0) {
-        throw Error('bad checksum');
+        // throw Error('bad checksum');
     }
     var command = data.slice(4, 16);
     var stripCommand = strip(command);
