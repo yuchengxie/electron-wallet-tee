@@ -49,7 +49,7 @@ function isIP(ip) {
 }
 
 //负责发送数据包
-PoetClient.prototype.start = function () {
+PoetClient.prototype._start = function () {
     this._active = true;
     setInterval(() => {
         if (this._active) {
@@ -60,7 +60,6 @@ PoetClient.prototype.start = function () {
             }
         }
     }, this.POET_POOL_HEARTBEAT);
-
 }
 
 PoetClient.prototype.invalid_command = function () {
@@ -184,14 +183,15 @@ PoetClient.prototype.send_message = function (msg, peer_addr) {
         if (err) {
             console.log('send err');
         } else {
-            // console.log('>>> send data:',bh.bufToStr(msg),bh.bufToStr(msg).length);
+            console.log('>>> send data:',bh.bufToStr(msg),bh.bufToStr(msg).length);
         }
     });
 
     this.socket.on('message', function (msg, rinfo) {
-        // console.log('>>> res data', bh.bufToStr(msg),bh.bufToStr(msg).length);
+        console.log('>>> res data', bh.bufToStr(msg),bh.bufToStr(msg).length);
         that._recv_buffer = msg;
         that._last_rx_time = timest();
+        that.command=message.getCommand(msg);
         addr = rinfo;
 
         if (that._recv_buffer) {
@@ -219,8 +219,9 @@ PoetClient.prototype.send_message = function (msg, peer_addr) {
 }
 
 PoetClient.prototype.handle_message = function (payload, that) {
-    var sCmd = message.command;
-    // console.log('>>> sCmd:', sCmd);
+    // var sCmd = message.getCommand(payload);
+    var sCmd=that.command;
+    console.log('>>> sCmd:', sCmd);
     if (sCmd == 'poetinfo') {
         var _bindMsg = new bindMsg(gFormat.poetinfo);
         var msg = _bindMsg.parse(payload, 0)[1];

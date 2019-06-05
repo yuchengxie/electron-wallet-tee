@@ -282,7 +282,7 @@ window.onload = function () {
     recordrfrom.value = teeAddr;
     var recordState = getElement('frame_record', 'recordState');
     var recordcontent = getElement('frame_record', 'content')
-    var recordpin = getElement('frame_record', 'transferpin');
+    var recordpin = getElement('frame_record', 'recordpin');
     var btn_record = getElement('frame_record', 'btn_record');
     
     btn_record.onclick = function () {
@@ -296,15 +296,28 @@ window.onload = function () {
             alert('password err');
             return;
         }
-        var v_content = recordcontent.value;
-        v_recordpin.value = '';
+        var v_content = recordcontent.value.trim();
+        recordpin.value = '';
         ipcRenderer.send('record', [v_content, v_recordpin]);
     }
 
     ipcRenderer.on('recordresult', (event, data) => {
-        console.log('recordresult:', data);
         recordState.innerText = data;
+        console.log('>>> 收到recordresult:',data);
     })
+
+    //miner
+    var btn_start=getElement('frame_miner', 'btn_start');
+    var btn_stop=getElement('frame_miner', 'btn_stop');
+    var minerState=getElement('frame_miner', 'minerState');
+    btn_start.onclick=function(){
+        alert('start miner');
+        ipcRenderer.send('start');
+    }
+    btn_stop.onclick=function(){
+        alert('stop miner');
+        ipcRenderer.send('stop');
+    }
 
 }
 

@@ -83,7 +83,7 @@ var found = {
             ['uock', 'uq'],
             ['value', 'q'],
             ['height', 'I'],
-            ['vcn','H']
+            ['vcn', 'H']
         ]
     }
 }
@@ -284,6 +284,43 @@ var udpreject = {
     }
 }
 
+var poettask = {
+    getFmt: function () {
+        return [
+            ['link_no', 'I'],
+            ['curr_id', 'I'],
+            ['timestamp', 'I']
+        ]
+    }
+}
+var poetreject = {
+    getFmt: function () {
+        return [
+            ['sequence', 'I'],
+            ['timestamp', 'I'],
+            ['reason', varstr]
+        ]
+    }
+}
+
+var poetinfo = {
+    getFmt: function () {
+        return [
+
+            ['link_no', 'I'],
+            ['curr_id', 'I'],
+            ['block_hash', byte(32)],
+            ['bits', 'I'],
+            ['height', 'I'],
+            ['prev_time', 'q'],
+            ['curr_time', 'q'],
+            ['txn_num', 'I'],
+        ]
+    }
+}
+
+
+
 var gFormat = {
     // 'I': null,
     'S': null,
@@ -316,6 +353,10 @@ var gFormat = {
 
     'udpconfirm': udpconfirm,
     'udpreject': udpreject,
+
+    'poettask': poettask,
+    'poetinfo': poetinfo,
+    'poetreject': poetreject,
 }
 
 module.exports = gFormat;

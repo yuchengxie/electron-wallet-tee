@@ -13,12 +13,15 @@
 	<script src="./bootstrap/js/bootstrap.min.js"></script>
 	<link rel="stylesheet" href="./bootstrap/css/bootstrap.css">
 	<link rel="stylesheet" href="./index.css">
+	<style>
 
+	</style>
 </head>
 </head>
 
 <body>
 	<div>
+		<!-- <nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark"> -->
 		<nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark">
 			<a class="navbar-brand" href="#">
 				<img class="logo" src="./static/img/hzf.png" alt="">
@@ -29,11 +32,17 @@
 			</button>
 
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
-				<ul class="navbar-nav mr-auto">
-					<li class="nav-item active">
+				<ul class="navbar-nav mr-auto" id='ul_navs'>
+					<!-- <li class="nav-item active">
 						<a class="nav-link" id='nav_home' onclick="tab(this)">首页 <span
 								class="sr-only">(current)</span></a>
+					</li> -->
+					<li class="nav-item">
+						<a class="nav-link active" id='nav_home' onclick="tab(this)">首页</a>
 					</li>
+					<!-- <li class="nav-item active">
+						<a class="nav-link" id='nav_block' onclick="tab(this)">首页</a>
+					</li> -->
 
 					<li class="nav-item dropdown">
 						<a class="nav-link dropdown-toggle" id="navbarDropdown" role="button" data-toggle="dropdown"
@@ -63,6 +72,9 @@
 
 					<li>
 						<a class="nav-link" id='nav_record' onclick="tab(this)">存证</a>
+					</li>
+					<li>
+						<a class="nav-link" id='nav_miner' onclick="tab(this)">挖矿</a>
 					</li>
 				</ul>
 				<form class="form-inline my-2 my-lg-0">
@@ -108,10 +120,11 @@
 				<iframe src="./render/record/record.html" width="100%" name='framerecord' frameborder="0"
 					scrolling="auto" id='frame_record'></iframe>
 			</div>
-			<!-- <div id='wallet_change' class="page">
-				<iframe src="./render/wallet/change/change.html" width="100%" name='frametransfer' frameborder="0"
-					scrolling="auto" id='frame_wallet_change'></iframe>
-			</div> -->
+			<div id='miner' class="page">
+				<iframe src="./render/miner/miner.html" width="100%" name='frameminer' frameborder="0"
+					scrolling="auto" id='frame_miner'></iframe>
+			</div>
+
 			<div id='setpin' class="page">
 				<iframe src="./render/wallet/pin/setpin.html" width="100%" name='framepin' frameborder="0"
 					scrolling="auto" id='frame_wallet_setpass'></iframe>

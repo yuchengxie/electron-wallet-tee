@@ -744,6 +744,7 @@ function _m2() {
                 }
 
                 if (txn_hash) {
+                    // var url = WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txn_hash + '&detail=1'; 
                     var url = WEB_SERVER_ADDR + '/txn/sheets/state?hash=' + txn_hash;
                     setInterval(() => {
                         dhttp({
@@ -752,7 +753,7 @@ function _m2() {
                         }, function (err, res) {
                             loop_query_tran(res);
                         })
-                    }, 10000);
+                    }, 5000);
                 }
             })
         }
@@ -832,8 +833,6 @@ function loop_query_tran(res) {
     if (!res.hasOwnProperty('body') || !res.hasOwnProperty('statusCode'))
         return
     var state = '';
-    // if (res.statusCode && res.statusCode == 200) {
-    //todo
     var command = message.getCommand(res.body);
     var payload = message.g_parse(res.body);
     if (command == 'reject') {
@@ -847,24 +846,26 @@ function loop_query_tran(res) {
             state = 'Error:' + sErr;
             console.log('Error:', sErr);
         }
-    } else if (command == 'confirm') {
+    }
+    else if (command == 'confirm') {
         var msg = new bindMsg(gFormat.udpconfirm);
         var confirmsg = msg.parse(payload, 0)[1];
         if (confirmsg.hash == bh.bufToStr(hash_)) {
-            // Transaction state: confirm=106, height=35208, index=1
             var args = confirmsg['args'];
-            // var height = (args & 0xffffffff);
             var height = bh.bufToNumer(args.slice(4, 8));
-            // var confirm = ((args >> 32) & 0xffff);
             var confirm = bh.bufToNumer(args.slice(2, 4));
-            // var index = ((args >> 48) & 0xffff);
             var index = bh.bufToNumer(args.slice(0, 2));
             state = '[' + chinaTime('YYYY-MM-DD HH:mm:ss') + '] ' + 'tran_hash=' + bh.bufToStr(hash_) + ' confirm=' + confirm + ' height=' + height + ' idx=' + index;
             console.log(state);
         }
     }
-    // tran_event.sender.send('transresult', state);
-    // console.log('>>> transresult:',state);
+    // else if (command == 'utxostate') {
+    //     var msg = message.parseUtxo(payload)[1];
+    //     msg = utxoScript(msg);
+    //     if (msg['heights'][0] == 0) {
+    //         console.log('pending',);
+    //     }
+    //     console.log('>>> utxomsg:', msg);
     // }
 }
 

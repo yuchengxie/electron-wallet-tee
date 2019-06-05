@@ -20,7 +20,16 @@ var navwallet = document.getElementById('nav_wallet_import');
 var navwallet = document.getElementById('nav_wallet_info');
 var navblock = document.getElementById('nav_block');
 
+
+// function t(){
+//     var es=document.getElementsByTagName()
+    
+// }
+
 function tab(e) {
+    
+    // e.classList.add('active');
+
     var p=e.getAttribute('id').split('_');
     var url='';
     if(p.length==2){

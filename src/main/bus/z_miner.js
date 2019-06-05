@@ -15,8 +15,8 @@ const Devices = smartcard.Devices;
 const devices = new Devices();
 const CommandApdu = smartcard.CommandApdu;
 var application;
-// var mine_hostname = 'user1-node.nb-chain.net';
-var mine_hostname = 'raw0.nb-chain.net';
+var mine_hostname = 'user1-node.nb-chain.net';
+// var mine_hostname = 'raw0.nb-chain.net';
 var mine_port = 30302;
 // var MINING_NODE_ADDR = ['user1-node.nb-chain.net', 30302];
 
@@ -108,27 +108,29 @@ devices.on('device-activated', event => {
 						pubAddr = bh.hexStrToBuffer(pubAddr).toString('latin1');
 						pseudoWallet = new PseudoWallet(pubkey, pubHash, pubAddr);
 						console.log('>>> pseudoWallet:', pseudoWallet);
-						query_sheet('', '');
+						// query_sheet('', '');
+					
+						dns.lookup(mine_hostname, (err, ip_addr, family) => {
+							if (err) { console.log('invalid hostname'); return; }
+							console.log('dns ip_addr:', ip_addr);
+							// this.PEER_ADDR_ = [ip_addr, port];
+							var tee = new TeeMiner(pubHash);
+							var gPoetClient = new PoetClient([tee], 0, '', 'clinet1');
+							gPoetClient.PEER_ADDR_ = [ip_addr, mine_port];
+							gPoetClient._last_peer_addr = gPoetClient.PEER_ADDR_;
+							//1.获取地址
+							// getPubAddr();
+							//2.获取
+							//1. 挖矿
+							gPoetClient._start();
+							gPoetClient.set_peer(gPoetClient.PEER_ADDR_);
+						})
 					})
 
 					// pseudoWallet.ready = true;
 					// this.instance = pseudoWallet;
 					// console.log('>>> pseudoWallet:', pseudoWallet);
-					// var tee = new TeeMiner(pubHash);
-					// var gPoetClient = new PoetClient([tee], 0, '', 'clinet1');
-					// dns.lookup(mine_hostname, (err, ip_addr, family) => {
-					//     if (err) { console.log('invalid hostname'); return; }
-					//     console.log('dns ip_addr:', ip_addr);
-					//     // this.PEER_ADDR_ = [ip_addr, port];
-					//     gPoetClient.PEER_ADDR_ = [ip_addr, mine_port];
-					//     gPoetClient._last_peer_addr = gPoetClient.PEER_ADDR_;
-					//     //1.获取地址
-					//     getPubAddr();
-					//     //2.获取
-					//     //1. 挖矿
-					//     // gPoetClient.start();
-					//     // gPoetClient.set_peer(gPoetClient.PEER_ADDR_);
-					// })
+					
 				});
 			});
 		})
@@ -167,6 +169,40 @@ function TeeMiner(pubHash) {
 	this.succ_blocks = [];
 	this.pub_keyhash = pubHash;
 }
+
+TeeMiner.prototype.check_elapsed = function (block_hash, bits, txn_num, curr_tm = '', sig_flag = '00', hi = 0) {
+	if (!application) return;
+	if (!curr_tm) curr_tm = timest();
+	try {
+		var sCmd = '8023' + sig_flag + '00';
+		sCmd = bh.hexStrToBuffer(sCmd);
+		var sBlockInfo = Buffer.concat([bh.hexStrToBuffer(block_hash), struct.pack('<II', [bits, txn_num])]);
+		var sData = Buffer.concat([struct.pack('<IB', [curr_tm, sBlockInfo.length]), sBlockInfo]);
+		sCmd = Buffer.concat([sCmd, struct.pack('<B', [sData.length]), sData]);
+		sCmd = bh.bufToStr(sCmd);
+		return transmit(sCmd).then(res => {
+			if (res.data.length > 128) {
+				this.succ_blocks.push([curr_tm, hi]);
+				if (this.succ_blocks.length > this.SUCC_BLOCKS_MAX) {
+					this.succ_blocks.splice(this.SUCC_BLOCKS_MAX, 1);
+				}
+				return Buffer.concat([bh.hexStrToBuffer(res.buffer), bh.hexStrToBuffer(sig_flag)]);
+			} else {
+				// return bh.hexStrToBuffer('00');
+				return '';
+			}
+		});
+	} catch (err) {
+		console.log(err);
+	}
+}
+
+function timest() {
+	var tmp = Date.parse(new Date()).toString();
+	tmp = tmp.substr(0, 10);
+	return parseInt(tmp);
+}
+
 
 
 var dhttp = require('dhttp');

@@ -20,8 +20,7 @@
             </div>
             <div class="col-8 control-group">
                 <div class="row col-form-label">存证内容:</div>
-                <input class="row form-control" type="text"
-                    value="" id='content' placeholder="请输入存证内容">
+                <input class="row form-control" type="text" value="hello cz" id='content' placeholder="请输入存证内容">
             </div>
             <!-- <div class="col-8 control-group">
                 <div class="row col-form-label">转账金额:</div>
@@ -30,7 +29,7 @@
 
             <div class="col-8 control-group">
                 <div class="row col-form-label">交易密码:</div>
-                <input class="row form-control" type="password" value="" id='transferpin' placeholder="请输入密码">
+                <input class="row form-control" type="password" value="000000" id='recordpin' placeholder="请输入密码">
             </div>
 
             <div class="col-8 control-group">
@@ -43,9 +42,10 @@
                         aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">pending</div>
                 </div>
             </div> -->
+
             <div class="col-8 control-group">
-                <div class="row col-8">
-                    <div id='recordState' style="font-size: 16px;color:blueviolet"></div>
+                <div class="row col-form-label">
+                    <div id='recordState' class="ct"></div>
                 </div>
             </div>
         </div>
@@ -58,5 +58,10 @@
 <style>
     .word {
         letter-spacing: .3em;
+    }
+
+    .ct {
+        font-size: 15px;
+        color:rgb(241, 48, 161);
     }
 </style>
