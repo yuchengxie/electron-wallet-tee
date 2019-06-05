@@ -108,7 +108,7 @@ devices.on('device-activated', event => {
 						pubAddr = bh.hexStrToBuffer(pubAddr).toString('latin1');
 						pseudoWallet = new PseudoWallet(pubkey, pubHash, pubAddr);
 						console.log('>>> pseudoWallet:', pseudoWallet);
-						// query_sheet('', '');
+						query_sheet('', '');
 					
 						// dns.lookup(mine_hostname, (err, ip_addr, family) => {
 						// 	if (err) { console.log('invalid hostname'); return; }
@@ -206,8 +206,8 @@ function timest() {
 
 
 var dhttp = require('dhttp');
-var message = require('./message');
-var gFormat = require('./format');
+var message = require('./message2');
+var gFormat = require('./format2');
 var Wallet = require('./wallet');
 const bufferhelp = require('./bufferhelp');
 const sha256 = require('js-sha256');
@@ -640,9 +640,10 @@ function submit_txn_(msg, submit) {
 	//4-16
 	var command = new Buffer(12);
 	command.write('makesheet', 0);
-	console.log('> msg:', msg);
 
-	var payload = makesheetbinary.compayload(msg);
+	// var payload = makesheetbinary.compayload(msg);//165个字节
+	var _bind=new bindMsg(gFormat.makesheet);
+	var payload=_bind.binary(msg,Buffer.from(''));
 
 	console.log('makesheet to payload buf\n:', payload, bufferhelp.bufToStr(payload), payload.length);
 	//16-20 payload length

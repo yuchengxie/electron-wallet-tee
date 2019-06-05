@@ -647,7 +647,7 @@ function getWaitSubmit(res, _type) {
     var msg = new bindMsg(gFormat.orgsheet);
 
     orgsheetMsg = msg.parse(payload, 0)[1];
-    // console.log('>>>>>> orgsheetMsg:', orgsheetMsg);
+    console.log('>>>>>> orgsheetMsg:', orgsheetMsg);
     var pubHash = pseudoWallet.pub_hash;
     var coin_hash = Buffer.concat([bh.hexStrToBuffer(pubHash), Buffer([0x00])]);
     var d = {};
