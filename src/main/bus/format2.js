@@ -197,9 +197,7 @@ var makesheet = {
             ['pay_from', pay_froms],
             ['pay_to', pay_tos],
             ['scan_count', 'H'],
-            // ['min_utxo', 'q'],
             ['min_utxo', 'uq'],
-            // ['max_utxo', 'q'],
             ['max_utxo', 'uq'],
             ['sort_flag', 'I'],
             ['last_uocks', 'uq[]'],
@@ -223,12 +221,29 @@ var varStrList = {
     }
 }
 
+var XXX = {
+    getFmt: function () {
+        return [
+            ['items', 'varstr[]']
+        ]
+    }
+}
+
+var list = {
+    getFmt: function () {
+        return [
+            // ['lll', XXX]
+            ['items', 'varstr[]']
+        ];
+    }
+}
+
 var orgsheet = {
     getFmt: function () {
         return [
             ['sequence', 'I'],
-            ['pks_out', varStrLists],
-            // ['last_uocks', 'q[]'],
+            // ['pks_out', varStrLists],
+            ['pks_out', 'list[]'],
             ['last_uocks', 'uq[]'],
             ['version', 'I'],
             ['tx_in', tx_ins],
@@ -326,6 +341,10 @@ var gFormat = {
     'S': null,
     'VS': varstr,
     'VInt': varInt,
+    'varstr': varstr,
+    'XXX': XXX,
+
+    'list': list,
 
     'txn': txn,
     'tx_in': tx_in,

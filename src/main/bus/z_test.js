@@ -38,7 +38,7 @@ function PseudoWallet(pubKey, pubHash, pubAddr, vcn = 0) {
 	var b_pub_hash = bufferhelp.hexStrToBuffer(this.pub_hash);
 	this._vcn = ((b_pub_hash[30]) << 8) + b_pub_hash[31];
 	this.coin_type = 0x00; // fixed to '00'
-	this.pin_code = '000000'; //always reset to '000000'
+	this.pin_code = '111111'; //always reset to '000000'
 	// this.pub_addr2 = utilkey.publickey_to_address(this.pub_key, this._vcn, this.coin_type, 0x00);
 }
 
@@ -317,12 +317,12 @@ function getWaitSubmit(res) {
 		if (item.value == 0 && item.pk_script.slice(0, 1) == '') {
 			continue;
 		}
-		var tokenzier = new opscript.Tokenizer(item.pk_script, null);
-		var addr = tokenzier.get_script_address();
+		
+		var addr=opscript._process(item.pk_script).split(' ')[2];//todo
 		if (!addr) {
 			console.log('Error: invalid output address (idx=)', idx);
 		} else {
-			value_ = d[addr];
+			var value_ = d[addr];
 
 			if (item.value != value_) {
 				if (value_ == undefined && addr.slice(4) == bufferhelp.bufToStr(coin_hash)) {
@@ -337,7 +337,7 @@ function getWaitSubmit(res) {
 		}
 	}
 
-	for (k in d) {
+	for (var k in d) {
 		console.log(k, d[k]);
 		if (coin_hash != addr.slice(2)) {
 			console.log('Error: unknown output address');
@@ -346,14 +346,13 @@ function getWaitSubmit(res) {
 	}
 
 	// pks_out0 = orgsheetMsg.pks_out;
-	// pks_num = orgsheetMsg.pks_out.length;
+	// pks_num = pks_out0.length;
 	var pks_out = orgsheetMsg.pks_out;
-	pks_out0 = [];
-	for (v in pks_out) {
-		pks_out0.push(pks_out[v]['items']);
-	}
-	pks_num = pks_out0.length;
-	// pks_num = orgsheetMsg.pks_out.length;
+    pks_out0 = [];
+    for (var v in pks_out) {
+        pks_out0.push(pks_out[v]['items']);
+    }
+    pks_num = pks_out0.length;
 
 	var tx_In = orgsheetMsg.tx_in;
 	var _len = tx_In.length;
@@ -379,6 +378,7 @@ function getWaitSubmit(res) {
 		hash_type = 1;
 
 		var _payload = make_payload(pks_out0[i], orgsheetMsg.version, tx_In, orgsheetMsg.tx_out, 0, i, hash_type);
+		console.log('>>> ready sign payload:',_payload,_payload.length);
 		var h = bitcoinjs.crypto.sha256(_payload);
 		var pinLen = parseInt(pseudoWallet.pin_code.length / 2);
 		var n1 = pinLen << 5;
@@ -388,7 +388,7 @@ function getWaitSubmit(res) {
 		}
 		var s2 = (pinLen + 32).toString(16);
 		if ((s2.length & 0x01) == 0x01) {
-			s2 += '0' + s2;
+			s2 += '0' + s2;      
 		}
 		sCmd = '802100' + s1 + s2 + pseudoWallet.pin_code + bh.bufToStr(h);
 		return transmit(sCmd).then(res => {
@@ -516,7 +516,7 @@ function getTxnHash(res) {
 			var info = submit_info(sn);
 			var state = info[2];
 			var txn_hash = bufferhelp.bufToStr(info[3]);
-			var last_uocks = bh.bufToNumer(info[4][0]);
+			var last_uocks = bh.bufToStr(info[4][0]);
 			if (state == 'submited' && txn_hash) {
 				var sDesc = '\nTransaction state:' + state;
 				if (last_uocks) {
